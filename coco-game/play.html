@@ -109,6 +109,13 @@
         }
     </style>
 </head>
+<script>
+    function vaiARandom(e) {
+        e.preventDefault();
+        const gioco = Math.floor(Math.random() * 6) + 1;
+        window.location.href = 'custom.html?gioco=' + gioco;
+    }
+</script>
 <body>
 
     <div class="header-play">PLAY</div>
@@ -125,9 +132,7 @@
         <div class="bottom-section">
             <a href="custom.html?gioco=5" class="card-link"><img src="img/memorycoco.png" alt="memorycoco" class="card-img"></a>
             
-            <a href="custom.html?gioco=1">
-                <img src="img/suscoco.png" alt="Coco" class="play-main-btn" id="centralPlay">
-            </a>
+            <img src="img/suscoco.png" alt="Coco" class="play-main-btn" id="centralPlay" onclick="vaiARandom(event)">
             
             <a href="custom.html?gioco=6" class="card-link"><img src="img/cocoman.png" alt="G6" class="card-img"></a>
         </div>
