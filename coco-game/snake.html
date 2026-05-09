@@ -122,7 +122,7 @@
             const freeCells = allCells.filter(cell =>
                 !snake.some(s => s.x === cell.x && s.y === cell.y)
             );
-            if (freeCells.length === 0) return allCells[0];
+            if (freeCells.length === 0) return allCells[0]; // fallback se la griglia è piena
             return freeCells[Math.floor(Math.random() * freeCells.length)];
         }
 
@@ -133,12 +133,12 @@
                 punti: punteggioFinale 
             };
 
-            let classifica = JSON.parse(localStorage.getItem("classifica_gioco_1")) || [];
+            let classifica = JSON.parse(localStorage.getItem("classifica_gioco_6")) || [];
             classifica.push(nuovoPunteggio);
             classifica.sort((a, b) => b.punti - a.punti);
             classifica = classifica.slice(0, 50);
 
-            localStorage.setItem("classifica_gioco_1", JSON.stringify(classifica));
+            localStorage.setItem("classifica_gioco_6", JSON.stringify(classifica));
         }
 
         function drawEntity(img, x, y, dir, isMirtillo = false) {

@@ -224,6 +224,7 @@
 
             if (playerSequence[currentIndex] !== gameSequence[currentIndex]) {
                 statusMsg.innerText = "SBAGLIATO!";
+                salvaPunteggio(gameSequence.length - 1);
                 startBtn.disabled = false;
                 startBtn.innerText = "RIPROVA";
                 gameSequence = [];
@@ -234,6 +235,16 @@
                 statusMsg.innerText = "GRANDE!";
                 setTimeout(nextRound, 1000);
             }
+        }
+
+        function salvaPunteggio(livello) {
+            const nomeGiocatore = localStorage.getItem("playerName") || "GUEST";
+            const nuovoPunteggio = { nome: nomeGiocatore.toUpperCase(), punti: livello };
+            let classifica = JSON.parse(localStorage.getItem("classifica_gioco_5")) || [];
+            classifica.push(nuovoPunteggio);
+            classifica.sort((a, b) => b.punti - a.punti);
+            classifica = classifica.slice(0, 50);
+            localStorage.setItem("classifica_gioco_5", JSON.stringify(classifica));
         }
     </script>
 </body>
