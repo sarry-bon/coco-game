@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rankings - Ultra Wide Edition</title>
+    <style>
+        /* 1. DEFINIZIONE DEL FONT PERSONALIZZATO */
+        @font-face {
+            font-family: 'KarmaticArcade';
+            src: url('font/ka1.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        /* 2. APPLICAZIONE UNIVERSALE */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'KarmaticArcade', sans-serif;
+        }
+
+        body {
+            background-color: #e4ad71;
+            color: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #classifica-titolo {
+            font-size: 32px; /* Adattato per nomi più lunghi */
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .rank-layout {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 95%;
+            max-width: 1800px;
+        }
+
+        .side-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 23px;
+            padding: 0 20px;
+        }
+
+        .game-btn {
+            width: 260px;
+            cursor: pointer;
+            image-rendering: pixelated;
+            transition: transform 0.1s;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            flex-grow: 1;
+        }
+
+        .table-container {
+            width: 850px;
+            background-color: #ffd8a1;
+            border: 4px solid #000;
+            image-rendering: pixelated;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 3px solid #000;
+            padding: 12px 10px;
+            text-align: center;
+            font-size: 22px;
+        }
+
+        th {
+            background-color: #ffb640;
+            font-size: 24px;
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 160px;
+        }
+
+        .nav-btn {
+            width: 70px;
+            cursor: pointer;
+            image-rendering: pixelated;
+            transition: 0.2s;
+        }
+
+        .game-btn:hover, .nav-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .back-arrow {
+            position: fixed;
+            bottom: 15px;
+            left: 25px;
+            width: 100px;
+            image-rendering: pixelated;
+            transition: transform 0.1s;
+        }
+        .back-arrow:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="classifica-titolo">CARICAMENTO...</div>
+
+    <div class="rank-layout">
+        
+        <div class="side-menu">
+            <img src="img/coco.png" alt="G1" class="game-btn" onclick="cambiaGioco(1)">
+            <img src="img/cocoman.png" alt="G2" class="game-btn" onclick="cambiaGioco(2)">
+            <img src="img/cocoshuter.png" alt="G3" class="game-btn" onclick="cambiaGioco(3)">
+        </div>
+
+        <div class="main-container">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>POS</th>
+                            <th>NOME</th>
+                            <th>PUNTI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rank-body"></tbody>
+                </table>
+            </div>
+
+            <div class="nav-controls">
+                <img src="img/frecciasu.png" alt="SU" class="nav-btn" onclick="cambiaPagina(-1)">
+                <img src="img/frecciagiu.png" alt="GIU" class="nav-btn" onclick="cambiaPagina(1)">
+            </div>
+        </div>
+
+        <div class="side-menu">
+            <img src="img/flappycoco.png" alt="G4" class="game-btn" onclick="cambiaGioco(4)">
+            <img src="img/memorycoco.png" alt="G5" class="game-btn" onclick="cambiaGioco(5)">
+            <img src="img/nayancoco.png" alt="G6" class="game-btn" onclick="cambiaGioco(6)">
+        </div>
+
+    </div>
+
+    <a href="index.html">
+        <img src="img/freccia.png" alt="Indietro" class="back-arrow">
+    </a>
+
+    <script>
+        let giocoAttuale = 1;
+        let paginaAttuale = 0; 
+
+        // Mappa dei nomi dei giochi per il titolo
+        const nomiGiochi = {
+            1: "PIO PIO PARTY",
+            2: "COCOMAN",
+            3: "COCO SHUTER",
+            4: "FLAPPY COCO",
+            5: "MEMORY COCO",
+            6: "NAYAN COCO"
+        };
+
+        function aggiornaTabella() {
+            const body = document.getElementById('rank-body');
+            const titolo = document.getElementById('classifica-titolo');
+            body.innerHTML = "";
+            
+            // Imposta il nome del gioco nel titolo
+            titolo.innerText = "CLASSIFICA " + nomiGiochi[giocoAttuale];
+
+            let datiReali = JSON.parse(localStorage.getItem("classifica_gioco_" + giocoAttuale)) || [];
+
+            const inizio = (paginaAttuale * 10);
+            const fine = inizio + 10;
+
+            for (let i = inizio; i < fine; i++) {
+                let nome, punti;
+
+                if (datiReali[i]) {
+                    nome = datiReali[i].nome;
+                    punti = datiReali[i].punti;
+                } else {
+                    nome = "---";
+                    punti = 0;
+                }
+
+                body.innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${nome}</td>
+                        <td>${punti}</td>
+                    </tr>
+                `;
+            }
+        }
+
+        function cambiaGioco(id) {
+            giocoAttuale = id;
+            paginaAttuale = 0; 
+            aggiornaTabella();
+        }
+
+        function cambiaPagina(direzione) {
+            paginaAttuale += direzione;
+            if (paginaAttuale < 0) paginaAttuale = 0;
+            if (paginaAttuale > 2) paginaAttuale = 2;
+            aggiornaTabella();
+        }
+
+        aggiornaTabella();
+    </script>
+
+</body>
+</html>

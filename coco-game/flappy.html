@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Il Gioco di Sara - Mega Egg Edition</title>
+    <style>
+        /* 1. DEFINIZIONE DEL FONT PERSONALIZZATO */
+        @font-face {
+            font-family: 'KarmaticArcade';
+            src: url('font/ka1.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #70c5ce;
+            overflow: hidden;
+            /* Applicazione del font al body per sicurezza */
+            font-family: 'KarmaticArcade', sans-serif;
+        }
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.imageSmoothingEnabled = false;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const birdImg1 = new Image();
+        birdImg1.src = 'img/coco1.png';
+        const birdImg2 = new Image();
+        birdImg2.src = 'img/coco2.png';
+
+        const eggImg1 = new Image();
+        eggImg1.src = 'img/uovo1.png';
+        const eggImg2 = new Image();
+        eggImg2.src = 'img/uovo2.png';
+        const eggImg3 = new Image();
+        eggImg3.src = 'img/uovo3.png';
+
+        const pipeTopImg = new Image();
+        pipeTopImg.src = 'img/tubo_su.png';
+        const pipeBottomImg = new Image();
+        pipeBottomImg.src = 'img/tubo_giù.png';
+
+        let frames = 0;
+        let score = 0;
+        let pipeCount = 0; 
+        let gameOver = false;
+
+        const bird = {
+            x: 120,
+            y: canvas.height / 2,
+            width: 180, 
+            height: 140, 
+            velocity: 0,
+            gravity: 0.5,    
+            jumpLimit: -10,  
+
+            draw() {
+                let currentImg = (Math.floor(frames / 8) % 2 === 0) ? birdImg1 : birdImg2;
+                if (currentImg.complete) {
+                    ctx.drawImage(currentImg, Math.floor(this.x), Math.floor(this.y), this.width, this.height);
+                } else {
+                    ctx.fillStyle = "yellow";
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                }
+            },
+            update() {
+                this.velocity += this.gravity;
+                this.y += this.velocity;
+                if (this.y + this.height >= canvas.height || this.y <= 0) gameOver = true;
+            },
+            jump() {
+                this.velocity = this.jumpLimit;
+            }
+        };
+
+        const prizes = {
+            items: [],
+            width: 120,
+            height: 150,
+
+            draw() {
+                this.items.forEach(egg => {
+                    let eggImgs = [eggImg1, eggImg2, eggImg3];
+                    let currentEggImg = eggImgs[Math.floor(frames / 6) % 3];
+
+                    if (currentEggImg.complete) {
+                        let floatingY = egg.y + Math.sin(frames / 10) * 15;
+                        ctx.drawImage(currentEggImg, Math.floor(egg.x), Math.floor(floatingY), this.width, this.height);
+                    }
+                });
+            },
+            update() {
+                for (let i = 0; i < this.items.length; i++) {
+                    let egg = this.items[i];
+                    egg.x -= 4.5; 
+
+                    if (bird.x < egg.x + this.width &&
+                        bird.x + bird.width > egg.x &&
+                        bird.y < egg.y + this.height &&
+                        bird.y + bird.height > egg.y) {
+                        score += 1000; // Valore ridotto per leggibilità classifica, modifica come vuoi
+                        this.items.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+
+                    if (egg.x + this.width < 0) {
+                        this.items.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+        };
+
+        const pipes = {
+            items: [],
+            width: 160,
+            gap: 320, 
+            dx: 4.5,
+
+            draw() {
+                this.items.forEach(p => {
+                    if (pipeTopImg.complete) {
+                        const ratioTop = pipeTopImg.height / pipeTopImg.width;
+                        const hTop = this.width * ratioTop;
+                        ctx.drawImage(pipeTopImg, Math.floor(p.x), Math.floor(p.y - hTop), this.width, hTop);
+                    }
+                    if (pipeBottomImg.complete) {
+                        const ratioBot = pipeBottomImg.height / pipeBottomImg.width;
+                        const hBot = this.width * ratioBot;
+                        ctx.drawImage(pipeBottomImg, Math.floor(p.x), Math.floor(p.y + this.gap), this.width, hBot);
+                    }
+                });
+            },
+
+            update() {
+                if (frames % 160 === 0) {
+                    pipeCount++;
+                    let pipeY = Math.floor(Math.random() * (canvas.height - this.gap - 300)) + 150;
+                    
+                    this.items.push({
+                        x: canvas.width,
+                        y: pipeY,
+                        passed: false
+                    });
+
+                    if (pipeCount % 10 === 0) {
+                        prizes.items.push({
+                            x: canvas.width + 450, 
+                            y: canvas.height / 2 - 75 
+                        });
+                    }
+                }
+
+                for (let i = 0; i < this.items.length; i++) {
+                    let p = this.items[i];
+                    p.x -= this.dx;
+
+                    if (bird.x + bird.width * 0.7 > p.x && bird.x + bird.width * 0.2 < p.x + this.width &&
+                        (bird.y + bird.height * 0.2 < p.y || bird.y + bird.height * 0.8 > p.y + this.gap)) {
+                        gameOver = true;
+                    }
+
+                    if (p.x + this.width < bird.x && !p.passed) {
+                        score += 10;
+                        p.passed = true;
+                    }
+
+                    if (p.x + this.width < 0) {
+                        this.items.shift();
+                        i--;
+                    }
+                }
+            },
+            reset() { 
+                this.items = []; 
+                prizes.items = [];
+                pipeCount = 0;
+            }
+        };
+
+        // --- DISEGNO SCORE CON NUOVO FONT ---
+        function drawScore() {
+            ctx.fillStyle = "white";
+            ctx.font = "40px 'KarmaticArcade'"; // Font aggiornato
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 4;
+            ctx.strokeText("SCORE: " + score, 40, 70);
+            ctx.fillText("SCORE: " + score, 40, 70);
+        }
+
+        // --- DISEGNO GAME OVER CON NUOVO FONT ---
+        function drawGameOver() {
+            ctx.fillStyle = "rgba(0,0,0,0.75)";
+            ctx.fillRect(0,0, canvas.width, canvas.height);
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            ctx.font = "60px 'KarmaticArcade'"; // Font aggiornato
+            ctx.fillText("GAME OVER", canvas.width/2, canvas.height/2);
+            ctx.font = "24px 'KarmaticArcade'"; // Font aggiornato
+            ctx.fillText("PREMI SPAZIO", canvas.width/2, canvas.height/2 + 80);
+            ctx.textAlign = "left";
+        }
+
+        function loop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.imageSmoothingEnabled = false;
+
+            if (!gameOver) {
+                bird.update();
+                pipes.update();
+                prizes.update();
+            }
+
+            pipes.draw();
+            prizes.draw();
+            bird.draw();
+            drawScore();
+
+            if (gameOver) {
+                drawGameOver();
+                if (!window.salvato) {
+                    salvaPunteggio();
+                    window.salvato = true;
+                }
+            } else {
+                frames++;
+                window.salvato = false; 
+                requestAnimationFrame(loop);
+            }
+        }
+
+        function salvaPunteggio() {
+            const nomeGiocatore = localStorage.getItem("playerName") || "GUEST";
+            const nuovoPunteggio = { 
+                nome: nomeGiocatore.toUpperCase(), 
+                punti: parseInt(score) 
+            };
+            let classifica = JSON.parse(localStorage.getItem("classifica_gioco_4")) || [];
+            classifica.push(nuovoPunteggio);
+            classifica.sort((a, b) => b.punti - a.punti);
+            classifica = classifica.slice(0, 50);
+            localStorage.setItem("classifica_gioco_4", JSON.stringify(classifica));
+        }
+
+        function resetGame() {
+            bird.y = canvas.height / 2;
+            bird.velocity = 0;
+            pipes.reset();
+            score = 0;
+            frames = 0;
+            gameOver = false;
+            loop();
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.code === "Space") {
+                if (gameOver) resetGame();
+                else bird.jump();
+            }
+        });
+
+        window.addEventListener("mousedown", () => {
+            if (gameOver) resetGame();
+            else bird.jump();
+        });
+
+        // Avvio
+        loop();
+    </script>
+</body>
+</html>

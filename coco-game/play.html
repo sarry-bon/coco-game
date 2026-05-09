@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play - Selezione Gioco</title>
+    <style>
+        /* 1. DEFINIZIONE DEL FONT PERSONALIZZATO */
+        @font-face {
+            font-family: 'KarmaticArcade';
+            /* Assicurati che il percorso sia corretto rispetto alla posizione di questo file */
+            src: url('font/ka1.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        /* 2. APPLICAZIONE A TUTTI GLI ELEMENTI */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'KarmaticArcade', sans-serif;
+        }
+
+        body {
+            background-color: #63c1ff;
+            color: #000;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .header-play {
+            /* Regola la dimensione se il font risulta troppo grande o piccolo */
+            font-size: 60px;
+            font-weight: 900;
+            letter-spacing: 10px;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            /* Effetto ombra tipico dei giochi pixel art */
+            text-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+        }
+
+        .game-selection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            width: 100%;
+        }
+
+        .row-4 {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .bottom-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            width: 100%;
+        }
+
+        .card-link {
+            transition: transform 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .card-img {
+            width: 300px; 
+            image-rendering: pixelated;
+            display: block;
+        }
+
+        .card-link:hover {
+            transform: scale(1.05);
+        }
+
+        .play-main-btn {
+            width: 250px;
+            cursor: pointer;
+            image-rendering: pixelated;
+            transition: transform 0.1s;
+        }
+
+        .play-main-btn:hover {
+            transform: scale(1.1) rotate(-2deg);
+        }
+
+        .back-arrow {
+            position: fixed;
+            bottom: 25px;
+            left: 25px;
+            width: 160px;
+            image-rendering: pixelated;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .back-arrow:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-play">PLAY</div>
+
+    <div class="game-selection">
+        
+        <div class="row-4">
+            <a href="custom.html?gioco=1" class="card-link"><img src="img/coco.png" alt="cocoman" class="card-img"></a>
+            <a href="custom.html?gioco=2" class="card-link"><img src="img/nayancoco.png" alt="nayancoco" class="card-img"></a>
+            <a href="custom.html?gioco=3" class="card-link"><img src="img/cocoshuter.png" alt="cocoshuter" class="card-img"></a>
+            <a href="custom.html?gioco=4" class="card-link"><img src="img/flappycoco.png" alt="flappycoco" class="card-img"></a>
+        </div>
+
+        <div class="bottom-section">
+            <a href="custom.html?gioco=5" class="card-link"><img src="img/memorycoco.png" alt="memorycoco" class="card-img"></a>
+            
+            <a href="custom.html?gioco=1">
+                <img src="img/suscoco.png" alt="Coco" class="play-main-btn" id="centralPlay">
+            </a>
+            
+            <a href="custom.html?gioco=6" class="card-link"><img src="img/cocoman.png" alt="G6" class="card-img"></a>
+        </div>
+
+    </div>
+
+    <a href="index.html">
+        <img src="img/freccia.png" alt="Torna indietro" class="back-arrow">
+    </a>
+
+</body>
+</html>
