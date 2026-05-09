@@ -127,11 +127,19 @@
         }
 
         function salvaPunteggio(punteggioFinale) {
-            const nomeGiocatore = localStorage.getItem("playerName") || "GUEST";
-            const nuovoPunteggio = { 
-                nome: nomeGiocatore.toUpperCase(), 
-                punti: punteggioFinale 
-            };
+            const nomeGiocatore = (localStorage.getItem("playerName") || "GUEST").toUpperCase();
+            let classifica = JSON.parse(localStorage.getItem("classifica_gioco_6")) || [];
+            const esistente = classifica.find(e => e.nome === nomeGiocatore);
+            if (esistente) {
+                if (punteggioFinale <= esistente.punti) return;
+                esistente.punti = punteggioFinale;
+            } else {
+                classifica.push({ nome: nomeGiocatore, punti: punteggioFinale });
+            }
+            classifica.sort((a, b) => b.punti - a.punti);
+            classifica = classifica.slice(0, 50);
+            localStorage.setItem("classifica_gioco_6", JSON.stringify(classifica));
+        };
 
             let classifica = JSON.parse(localStorage.getItem("classifica_gioco_6")) || [];
             classifica.push(nuovoPunteggio);

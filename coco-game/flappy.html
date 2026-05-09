@@ -58,8 +58,6 @@
 
         const pipeTopImg = new Image();
         pipeTopImg.src = 'img/tubo_su.png';
-        const pipeBottomImg = new Image();
-        pipeBottomImg.src = 'img/tubo_giù.png';
 
         let frames = 0;
         let score = 0;
@@ -146,10 +144,14 @@
                         const hTop = this.width * ratioTop;
                         ctx.drawImage(pipeTopImg, Math.floor(p.x), Math.floor(p.y - hTop), this.width, hTop);
                     }
-                    if (pipeBottomImg.complete) {
-                        const ratioBot = pipeBottomImg.height / pipeBottomImg.width;
+                    if (pipeTopImg.complete) {
+                        const ratioBot = pipeTopImg.height / pipeTopImg.width;
                         const hBot = this.width * ratioBot;
-                        ctx.drawImage(pipeBottomImg, Math.floor(p.x), Math.floor(p.y + this.gap), this.width, hBot);
+                        ctx.save();
+                        ctx.translate(Math.floor(p.x) + this.width / 2, Math.floor(p.y + this.gap) + hBot / 2);
+                        ctx.rotate(Math.PI);
+                        ctx.drawImage(pipeTopImg, -this.width / 2, -hBot / 2, this.width, hBot);
+                        ctx.restore();
                     }
                 });
             },
@@ -252,11 +254,20 @@
         }
 
         function salvaPunteggio() {
-            const nomeGiocatore = localStorage.getItem("playerName") || "GUEST";
-            const nuovoPunteggio = { 
-                nome: nomeGiocatore.toUpperCase(), 
-                punti: parseInt(score) 
-            };
+            const nomeGiocatore = (localStorage.getItem("playerName") || "GUEST").toUpperCase();
+            const punti = parseInt(score);
+            let classifica = JSON.parse(localStorage.getItem("classifica_gioco_4")) || [];
+            const esistente = classifica.find(e => e.nome === nomeGiocatore);
+            if (esistente) {
+                if (punti <= esistente.punti) return;
+                esistente.punti = punti;
+            } else {
+                classifica.push({ nome: nomeGiocatore, punti: punti });
+            }
+            classifica.sort((a, b) => b.punti - a.punti);
+            classifica = classifica.slice(0, 50);
+            localStorage.setItem("classifica_gioco_4", JSON.stringify(classifica));
+        };
             let classifica = JSON.parse(localStorage.getItem("classifica_gioco_4")) || [];
             classifica.push(nuovoPunteggio);
             classifica.sort((a, b) => b.punti - a.punti);

@@ -238,8 +238,19 @@
         }
 
         function salvaPunteggio(livello) {
-            const nomeGiocatore = localStorage.getItem("playerName") || "GUEST";
-            const nuovoPunteggio = { nome: nomeGiocatore.toUpperCase(), punti: livello };
+            const nomeGiocatore = (localStorage.getItem("playerName") || "GUEST").toUpperCase();
+            let classifica = JSON.parse(localStorage.getItem("classifica_gioco_5")) || [];
+            const esistente = classifica.find(e => e.nome === nomeGiocatore);
+            if (esistente) {
+                if (livello <= esistente.punti) return;
+                esistente.punti = livello;
+            } else {
+                classifica.push({ nome: nomeGiocatore, punti: livello });
+            }
+            classifica.sort((a, b) => b.punti - a.punti);
+            classifica = classifica.slice(0, 50);
+            localStorage.setItem("classifica_gioco_5", JSON.stringify(classifica));
+        };
             let classifica = JSON.parse(localStorage.getItem("classifica_gioco_5")) || [];
             classifica.push(nuovoPunteggio);
             classifica.sort((a, b) => b.punti - a.punti);
