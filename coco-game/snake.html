@@ -111,10 +111,19 @@
         }
 
         function getRandomFood() {
-            return {
-                x: Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize,
-                y: Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize
-            };
+            const cols = canvas.width / gridSize;
+            const rows = canvas.height / gridSize;
+            const allCells = [];
+            for (let col = 0; col < cols; col++) {
+                for (let row = 0; row < rows; row++) {
+                    allCells.push({ x: col * gridSize, y: row * gridSize });
+                }
+            }
+            const freeCells = allCells.filter(cell =>
+                !snake.some(s => s.x === cell.x && s.y === cell.y)
+            );
+            if (freeCells.length === 0) return allCells[0];
+            return freeCells[Math.floor(Math.random() * freeCells.length)];
         }
 
         function salvaPunteggio(punteggioFinale) {
