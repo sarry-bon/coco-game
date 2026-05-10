@@ -5,171 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Custom Game - Configurazione</title>
     <style>
-        /* 1. CARICAMENTO FONT ARCADE */
-        @font-face {
-            font-family: 'KarmaticArcade';
-            src: url('font/ka1.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-
-        /* 2. APPLICAZIONE GLOBALE DEL FONT */
+        @font-face { font-family: 'KarmaticArcade'; src: url('font/ka1.ttf') format('truetype'); }
         body {
             margin: 0; padding: 0; height: 100vh; display: flex;
-            font-family: 'KarmaticArcade', sans-serif;
-            overflow: hidden; 
-            background-size: cover; 
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            position: relative; 
-            color: white; 
-            transition: background 0.5s;
-            background-color: #000; /* Fondo di sicurezza */
+            font-family: 'KarmaticArcade', sans-serif; overflow: hidden;
+            background-size: cover; background-position: center;
+            background-repeat: no-repeat; background-attachment: fixed;
+            position: relative; color: white; transition: background 0.5s;
+            background-color: #000;
         }
-
-        /* OVERLAY INVERTITO: Il colore è a sinistra, la trasparenza a destra */
         body::before {
-            content: ""; 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%;
-            /* Il colore pieno (primary-color) è a sinistra, verso destra diventa trasparente */
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(to left, rgba(0,0,0,0) 0%, var(--primary-color, #042f50) 100%);
-            z-index: 1;
-            pointer-events: none;
+            z-index: 1; pointer-events: none;
         }
-
         .content-wrapper { position: relative; z-index: 2; display: flex; width: 100%; height: 100%; }
-        
-        .left-panel { 
-            width: 55%; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between; 
-            padding: 80px 60px; 
-            box-sizing: border-box; 
-            /* Leggero fondo scuro per assicurare la leggibilità del testo */
+        .left-panel {
+            width: 55%; display: flex; flex-direction: column; justify-content: space-between;
+            padding: clamp(30px, 6vh, 80px) clamp(20px, 4vw, 60px);
+            box-sizing: border-box;
             background: linear-gradient(to right, rgba(0,0,0,0.5), transparent);
         }
-        
-        #titolo-gioco { 
-            font-size: 50px; 
-            color: var(--accent-color, #f1c40f); 
-            text-transform: uppercase; 
-            margin: 0; 
-            text-shadow: 4px 4px 0px #000; 
-            line-height: 1.1;
+        #titolo-gioco {
+            font-size: clamp(24px, 4vw, 50px); color: var(--accent-color, #f1c40f);
+            text-transform: uppercase; margin: 0; text-shadow: 4px 4px 0px #000; line-height: 1.1;
         }
-
-        #descrizione-gioco { 
-            font-size: 18px; 
-            margin: 30px 0; 
-            line-height: 1.5; 
-            max-width: 600px; 
-            background: rgba(0,0,0,0.6); 
-            padding: 15px; 
+        #descrizione-gioco {
+            font-size: clamp(12px, 1.3vw, 18px); margin: clamp(10px, 2vh, 30px) 0;
+            line-height: 1.5; max-width: 600px;
+            background: rgba(0,0,0,0.6); padding: 15px;
             border-left: 5px solid var(--accent-color, #fff);
-            font-family: 'Courier New', Courier, monospace; 
+            font-family: 'Courier New', Courier, monospace;
         }
-
-        .login-box { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 20px; 
-            width: fit-content; 
-            background: rgba(255,255,255,0.05); 
-            padding: 25px; 
-            border: 2px solid rgba(255,255,255,0.2); 
-            backdrop-filter: blur(5px); 
+        .login-box {
+            display: flex; flex-direction: column; gap: clamp(10px, 2vh, 20px);
+            width: fit-content; background: rgba(255,255,255,0.05);
+            padding: clamp(12px, 2vh, 25px); border: 2px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(5px);
         }
-
-        .name-tag { 
-            font-size: 22px; 
-            min-width: 280px; 
-            text-align: center; 
-            background: #222; 
-            padding: 12px; 
-            border: 2px solid var(--accent-color, #f1c40f); 
-            color: var(--accent-color, #f1c40f); 
+        .name-tag {
+            font-size: clamp(14px, 1.8vw, 22px); min-width: clamp(160px, 20vw, 280px);
+            text-align: center; background: #222; padding: 12px;
+            border: 2px solid var(--accent-color, #f1c40f); color: var(--accent-color, #f1c40f);
         }
-
-        .input-field { 
-            background: #000; 
-            border: 2px solid #fff; 
-            color: #fff; 
-            padding: 12px; 
-            width: 100%; 
-            font-family: 'KarmaticArcade', sans-serif;
-            font-size: 14px;
+        .input-field {
+            background: #000; border: 2px solid #fff; color: #fff; padding: 12px;
+            width: 100%; font-family: 'KarmaticArcade', sans-serif; font-size: clamp(11px, 1.1vw, 14px);
         }
-        
         .right-panel { width: 45%; display: flex; align-items: center; justify-content: center; }
-        
-        .play-arrow { 
-            width: 150px; 
-            cursor: pointer; 
-            transition: transform 0.2s; 
-            image-rendering: pixelated; 
-            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+        .play-arrow {
+            width: clamp(80px, 12vw, 150px); cursor: pointer; transition: transform 0.2s;
+            image-rendering: pixelated; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
         }
-        
         .play-arrow:hover { transform: scale(1.1); }
-        
-        .back-btn { 
-            position: fixed; 
-            bottom: 25px; 
-            left: 25px; 
-            width: 80px; 
-            z-index: 10; 
-            image-rendering: pixelated;
-        }
-
+        .back-btn { position: fixed; bottom: 25px; left: 25px; width: clamp(50px, 6vw, 80px); z-index: 10; image-rendering: pixelated; }
         button.arrow-nav {
-            cursor: pointer; 
-            background: none; 
-            border: none; 
-            color: white; 
-            font-size: 30px;
-            transition: transform 0.1s;
+            cursor: pointer; background: none; border: none; color: white;
+            font-size: clamp(18px, 2.5vw, 30px); transition: transform 0.1s;
         }
         button.arrow-nav:hover { transform: scale(1.2); }
-
     </style>
 </head>
 <body id="main-body">
-
 <div class="content-wrapper">
     <div class="left-panel">
         <div class="header-section">
             <h1 id="titolo-gioco">CARICAMENTO...</h1>
             <p id="descrizione-gioco">Preparati alla sfida.</p>
         </div>
-
         <div class="login-box">
             <div class="name-section">
-                <div style="font-size: 12px; color: #ccc; margin-bottom: 8px; letter-spacing: 2px;">PROFILO</div>
+                <div style="font-size: clamp(9px, 1vw, 12px); color: #ccc; margin-bottom: 8px; letter-spacing: 2px;">PROFILO</div>
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <button class="arrow-nav" onclick="nextName(-1)">◀</button>
                     <div id="current-name" class="name-tag">KNIGHT</div>
                     <button class="arrow-nav" onclick="nextName(1)">▶</button>
                 </div>
             </div>
-            <div>
-                <input type="text" id="new-name" class="input-field" placeholder="NUOVO NOME...">
-            </div>
+            <div><input type="text" id="new-name" class="input-field" placeholder="NUOVO NOME..."></div>
         </div>
     </div>
-
     <div class="right-panel">
         <img src="img/playbutton.png" class="play-arrow" onclick="startGame()">
     </div>
 </div>
-
 <a href="play.html"><img src="img/freccia.png" class="back-btn"></a>
-
 <script>
     const giochiData = {
         "1": { titolo: "Cocoman Classic", desc: "Il ritorno del mito. Raccogli i punti e sopravvivi.", color: "#042f50", accent: "#f1c40f", link: "game1.html", bg: "img/sfondo1.png" },
@@ -180,40 +100,28 @@
         "6": { titolo: "Pio Pio Party", desc: "L'evoluzione finale del platform pixelato.", color: "#c0392b", accent: "#f1c40f", link: "snake.html", bg: "img/sfondo6.png" },
         "7": { titolo: "Coco Mystery", desc: "Scopri cosa si nasconde dietro l'ultimo livello.", color: "#2c3e50", accent: "#9b59b6", link: "game7.html", bg: "img/sfondo7.png" }
     };
-
     const urlParams = new URLSearchParams(window.location.search);
     const giocoId = urlParams.get('gioco') || "1";
     const config = giochiData[giocoId];
-
     if (config) {
         document.getElementById("titolo-gioco").innerText = config.titolo;
         document.getElementById("descrizione-gioco").innerText = config.desc;
-        
-        // Impostiamo l'immagine di sfondo
         document.body.style.backgroundImage = `url('${config.bg}')`;
-        
-        // Passiamo i colori alle variabili CSS
         document.body.style.setProperty('--primary-color', config.color);
         document.body.style.setProperty('--accent-color', config.accent);
     }
-
     let nomi = ["KNIGHT", "KING", "MAGE", "COCO-FAN"];
     let idx = 0;
     function nextName(dir) {
         idx = (idx + dir + nomi.length) % nomi.length;
         document.getElementById("current-name").innerText = nomi[idx];
     }
-
     function startGame() {
         const input = document.getElementById("new-name").value;
         const finalName = input.trim() !== "" ? input : nomi[idx];
         localStorage.setItem("playerName", finalName);
-
-        if (config) {
-            window.location.href = config.link;
-        }
+        if (config) window.location.href = config.link;
     }
 </script>
-
 </body>
 </html>

@@ -5,137 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memory Coco - Pixel Art Edition</title>
     <style>
-        /* 1. DEFINIZIONE DEL FONT PERSONALIZZATO */
-        @font-face {
-            font-family: 'KarmaticArcade';
-            /* Assicurati che il file ka1.ttf sia nella cartella 'font/' */
-            src: url('font/ka1.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-
-        :root {
-            --bg-color: #fdf5e6;
-            --accent: #e67e22;
-        }
-
-        /* 2. APPLICAZIONE UNIVERSALE DEL FONT */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'KarmaticArcade', sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-
-        h1 {
-            color: #d35400;
-            font-size: 3rem; /* Leggermente ridotto perché il font è largo */
-            margin-bottom: 5px;
-            text-shadow: 3px 3px #fff;
-            text-align: center;
-        }
-
-        #score-display {
-            font-size: 1.5rem;
-            color: #7f8c8d;
-            margin-bottom: 20px;
-        }
-
-        .hen-row {
-            display: flex;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-
-        .hen {
-            width: 250px; /* Ridotto leggermente per far spazio al testo largo */
-            height: auto;
-            cursor: pointer;
-            transition: transform 0.1s;
-            user-select: none;
-            image-rendering: pixelated; 
-            image-rendering: crisp-edges;
-        }
-
-        .hen img {
-            width: 100%;
-            display: block;
-        }
-
-        /* Gestione Frame */
+        @font-face { font-family: 'KarmaticArcade'; src: url('font/ka1.ttf') format('truetype'); }
+        :root { --bg-color: #fdf5e6; --accent: #e67e22; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'KarmaticArcade', sans-serif; }
+        body { background-color: var(--bg-color); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+        h1 { color: #d35400; font-size: clamp(1.5rem, 4vw, 3rem); margin-bottom: 5px; text-shadow: 3px 3px #fff; text-align: center; }
+        #score-display { font-size: clamp(0.9rem, 1.8vw, 1.5rem); color: #7f8c8d; margin-bottom: clamp(10px, 2vh, 20px); }
+        .hen-row { display: flex; gap: clamp(10px, 2vw, 30px); margin-bottom: clamp(15px, 3vh, 40px); }
+        .hen { width: clamp(80px, 14vw, 250px); height: auto; cursor: pointer; transition: transform 0.1s; user-select: none; image-rendering: pixelated; }
+        .hen img { width: 100%; display: block; }
         .hen .open-frame { display: none; }
-        
         .hen.active .closed-frame { display: none; }
         .hen.active .open-frame { display: block; }
-
-        /* Effetto feedback al click */
         .hen:active { transform: scale(0.95); }
-
         #start-btn {
-            padding: 20px 50px;
-            font-size: 1.8rem;
-            background-color: #27ae60;
-            color: white;
-            border: 4px solid #000; /* Bordo più marcato stile pixel */
-            border-radius: 0px; /* Angoli netti per stile retro */
-            cursor: pointer;
-            box-shadow: 0 8px 0 #1e8449;
-            transition: all 0.1s;
-            text-transform: uppercase;
+            padding: clamp(10px, 1.5vh, 20px) clamp(25px, 4vw, 50px);
+            font-size: clamp(1rem, 2vw, 1.8rem);
+            background-color: #27ae60; color: white;
+            border: 4px solid #000; border-radius: 0; cursor: pointer;
+            box-shadow: 0 8px 0 #1e8449; transition: all 0.1s; text-transform: uppercase;
         }
-
-        #start-btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 4px 0 #1e8449;
-        }
-
-        #start-btn:disabled {
-            background-color: #bdc3c7;
-            box-shadow: 0 6px 0 #95a5a6;
-            cursor: not-allowed;
-            border-color: #7f8c8d;
-        }
-
-        .status-msg {
-            font-size: 1.2rem;
-            height: 40px;
-            margin-bottom: 15px;
-            font-weight: bold;
-            color: #c0392b;
-            text-align: center;
-        }
-
-        /* Tasto indietro (aggiunto per coerenza con le altre pagine) */
-        .back-arrow {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            width: 80px;
-            image-rendering: pixelated;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-        .back-arrow:hover {
-            transform: scale(1.1);
-        }
+        #start-btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #1e8449; }
+        #start-btn:disabled { background-color: #bdc3c7; box-shadow: 0 6px 0 #95a5a6; cursor: not-allowed; border-color: #7f8c8d; }
+        .status-msg { font-size: clamp(0.8rem, 1.5vw, 1.2rem); height: 40px; margin-bottom: 15px; font-weight: bold; color: #c0392b; text-align: center; }
+        .back-arrow { position: fixed; bottom: 20px; left: 20px; width: clamp(50px, 6vw, 80px); image-rendering: pixelated; cursor: pointer; transition: transform 0.1s; }
+        .back-arrow:hover { transform: scale(1.1); }
     </style>
 </head>
 <body>
-
     <h1>MEMORY COCO</h1>
-    <div id="score-display">LIVRELLO: 0</div>
+    <div id="score-display">LIVELLO: 0</div>
     <div class="status-msg" id="status-msg">PREMI INIZIA!</div>
-
     <div class="hen-row">
         <div class="hen" data-id="1" onclick="handleHenClick(1)">
             <img src="img/cocoframe1.png" class="closed-frame">
@@ -154,22 +54,13 @@
             <img src="img/cocoframe7.png" class="open-frame">
         </div>
     </div>
-
     <button id="start-btn">INIZIA</button>
-
-    <a href="index.html">
-        <img src="img/freccia.png" alt="Indietro" class="back-arrow">
-    </a>
-
+    <a href="index.html"><img src="img/freccia.png" alt="Indietro" class="back-arrow"></a>
     <script>
-        let gameSequence = [];
-        let playerSequence = [];
-        let isPlayingSequence = false;
-
+        let gameSequence = [], playerSequence = [], isPlayingSequence = false;
         const startBtn = document.getElementById('start-btn');
         const statusMsg = document.getElementById('status-msg');
         const scoreDisplay = document.getElementById('score-display');
-
         startBtn.addEventListener('click', startGame);
 
         function startGame() {
@@ -177,52 +68,37 @@
             startBtn.disabled = true;
             nextRound();
         }
-
         function nextRound() {
             playerSequence = [];
             scoreDisplay.innerText = "LIVELLO: " + (gameSequence.length + 1);
-            
-            const randomHen = Math.floor(Math.random() * 4) + 1;
-            gameSequence.push(randomHen);
-            
+            gameSequence.push(Math.floor(Math.random() * 4) + 1);
             setTimeout(playSequence, 800);
         }
-
         async function playSequence() {
             isPlayingSequence = true;
             statusMsg.innerText = "GUARDA BENE...";
-            
             for (let id of gameSequence) {
                 await flashHen(id);
                 await new Promise(r => setTimeout(r, 250));
             }
-            
             isPlayingSequence = false;
             statusMsg.innerText = "RIPETI!";
         }
-
         function flashHen(id) {
             return new Promise(resolve => {
                 const hen = document.querySelector(`.hen[data-id="${id}"]`);
                 hen.classList.add('active');
-                setTimeout(() => {
-                    hen.classList.remove('active');
-                    resolve();
-                }, 500); 
+                setTimeout(() => { hen.classList.remove('active'); resolve(); }, 500);
             });
         }
-
         function handleHenClick(id) {
             if (isPlayingSequence || gameSequence.length === 0) return;
-
             const hen = document.querySelector(`.hen[data-id="${id}"]`);
             hen.classList.add('active');
             setTimeout(() => hen.classList.remove('active'), 150);
-
             playerSequence.push(id);
-            const currentIndex = playerSequence.length - 1;
-
-            if (playerSequence[currentIndex] !== gameSequence[currentIndex]) {
+            const idx = playerSequence.length - 1;
+            if (playerSequence[idx] !== gameSequence[idx]) {
                 statusMsg.innerText = "SBAGLIATO!";
                 salvaPunteggio(gameSequence.length - 1);
                 startBtn.disabled = false;
@@ -230,13 +106,11 @@
                 gameSequence = [];
                 return;
             }
-
             if (playerSequence.length === gameSequence.length) {
                 statusMsg.innerText = "GRANDE!";
                 setTimeout(nextRound, 1000);
             }
         }
-
         function salvaPunteggio(livello) {
             const nomeGiocatore = (localStorage.getItem("playerName") || "GUEST").toUpperCase();
             let classifica = JSON.parse(localStorage.getItem("classifica_gioco_5")) || [];
@@ -247,12 +121,6 @@
             } else {
                 classifica.push({ nome: nomeGiocatore, punti: livello });
             }
-            classifica.sort((a, b) => b.punti - a.punti);
-            classifica = classifica.slice(0, 50);
-            localStorage.setItem("classifica_gioco_5", JSON.stringify(classifica));
-        };
-            let classifica = JSON.parse(localStorage.getItem("classifica_gioco_5")) || [];
-            classifica.push(nuovoPunteggio);
             classifica.sort((a, b) => b.punti - a.punti);
             classifica = classifica.slice(0, 50);
             localStorage.setItem("classifica_gioco_5", JSON.stringify(classifica));

@@ -5,111 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instructions - Pixel Art</title>
     <style>
-        /* 1. DEFINIZIONE DEL FONT PERSONALIZZATO */
-        @font-face {
-            font-family: 'KarmaticArcade';
-            src: url('font/ka1.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-
-        /* 2. APPLICAZIONE UNIVERSALE */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'KarmaticArcade', sans-serif;
-        }
-
-        body {
-            background-color: #2c3e50;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .book-container {
-            position: relative;
-            display: inline-block;
-        }
-
-        .book-container img {
-            width: 90vw;
-            height: auto;
-            image-rendering: pixelated;
-            display: block;
-        }
-
-        /* 3. TESTI SOPRA IL LIBRO */
+        @font-face { font-family: 'KarmaticArcade'; src: url('font/ka1.ttf') format('truetype'); }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'KarmaticArcade', sans-serif; }
+        body { background-color: #2c3e50; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .book-container { position: relative; display: inline-block; }
+        .book-container img { width: clamp(320px, 90vw, 1400px); height: auto; image-rendering: pixelated; display: block; }
         .text-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            pointer-events: none; /* Così non blocca i click */
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: space-around; align-items: center; pointer-events: none;
         }
-
-        .page-content {
-            width: 35%; /* Posiziona il testo approssimativamente sulle pagine del libro */
-            text-align: center;
-            color: #4a3321; /* Colore marrone scuro tipo inchiostro */
-            font-size: 1.5vw;
-            line-height: 1.8;
-        }
-
-        .back-arrow {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            width: 40vw;
-            max-width: 100px;
-            image-rendering: pixelated;
-            cursor: pointer;
-            z-index: 999;
-            transition: transform 0.2s;
-        }
-
-        .back-arrow:hover {
-            transform: scale(1.1);
-        }
-
-        .mirror {
-            transform: scaleX(-1);
-        }
-        .mirror:hover {
-            transform: scaleX(-1) scale(1.1);
-        }
+        .page-content { width: 35%; text-align: center; color: #4a3321; font-size: clamp(10px, 1.5vw, 22px); line-height: 1.8; }
+        .back-arrow { position: fixed; bottom: 20px; left: 20px; width: clamp(60px, 7vw, 100px); image-rendering: pixelated; cursor: pointer; z-index: 999; transition: transform 0.2s; }
+        .back-arrow:hover { transform: scale(1.1); }
     </style>
 </head>
 <body>
-
     <div class="book-container">
         <img src="img/libro.png" alt="Libro Istruzioni">
-        
         <div class="text-overlay">
             <div class="page-content">
-                <h2 style="font-size: 2.5vw; margin-bottom: 20px;">COMANDI</h2>
+                <h2 style="font-size: clamp(14px, 2.5vw, 36px); margin-bottom: 20px;">COMANDI</h2>
                 <p>USA LE FRECCE<br>PER MUOVERTI</p>
                 <p>SPAZIO PER<br>SALTARE</p>
             </div>
             <div class="page-content">
-                <h2 style="font-size: 2.5vw; margin-bottom: 20px;">OBIETTIVO</h2>
+                <h2 style="font-size: clamp(14px, 2.5vw, 36px); margin-bottom: 20px;">OBIETTIVO</h2>
                 <p>RACCOGLI TUTTI<br>I COCCO-BONUS</p>
                 <p>EVITA I<br>NEMICI!</p>
             </div>
         </div>
     </div>
-
-    <a href="index.html">
-        <img src="img/freccia.png" alt="Indietro" class="back-arrow">
-    </a>
-
+    <a href="index.html"><img src="img/freccia.png" alt="Indietro" class="back-arrow"></a>
 </body>
 </html>
