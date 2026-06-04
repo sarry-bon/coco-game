@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COOM</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="stile-score.css"> 
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Courier New', Courier, monospace;
+            cursor: crosshair;
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated; 
+            image-rendering: crisp-edges;
+            object-fit: fill;
+        }
+
+        /* INTERFACCIA HTML - IDENTICA A FLAPPY/SNAKE MA SU 3 RIGHE DISTINTE */
+        .doom-ui-container {
+            position: absolute !important;
+            top: 20px !important;
+            left: 20px !important;
+            z-index: 9999 !important;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* Spazio preciso tra le tre righe */
+        }
+
+        .doom-ui-line {
+            font-family: 'KarmaticArcade', sans-serif !important;
+            font-size: clamp(24px, 4vw, 40px) !important; /* Stessa identica grandezza di Flappy */
+            font-weight: 900 !important;
+            color: #ffffff !important;
+            text-shadow: 3px 3px 0px #000000 !important;
+            letter-spacing: 2px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            text-transform: uppercase;
+        }
+
+        /* Barra della stamina a destra */
+        #stamina-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: none; 
+            align-items: center;
+            gap: 10px;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 3px;
+        }
+
+        #stamina-bar-bg {
+            width: 120px;
+            height: 10px;
+            border: 1px solid #ffffff; 
+            background: transparent;    
+            overflow: hidden;
+        }
+
+        #stamina-bar-fill {
+            width: 100%;
+            height: 100%;
+            background: #ffffff; 
+            transition: width 0.05s linear;
+        }
+
+        #runner-icon {
+            font-size: 1.3rem;
+            line-height: 1;
+            color: #ffffff; 
+        }
+
+        #damage-flash {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(255, 0, 0, 0.4);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.05s ease-out;
+        }
+
+        /* SCHERMATA DI GAME OVER */
+        .game-over-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.85); 
+            display: none; 
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            backdrop-filter: blur(2px); 
+        }
+
+        .game-over-box {
+            background-color: #2c3e50;
+            border: 6px solid #e74c3c;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 0 #000;
+            max-width: 500px;
+            width: 85%;
+        }
+
+        .game-over-box h2 {
+            color: #e74c3c;
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            margin: 0 0 10px 0;
+            text-shadow: 3px 3px #000;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        .final-score-text {
+            color: #fff;
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .game-over-menu {
+            display: flex;
+            justify-content: space-around;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .go-btn {
+            background-color: #34495e;
+            border: 4px solid #000;
+            color: #fff;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            width: 30%;
+            transition: transform 0.1s;
+            text-decoration: none;
+        }
+
+        .go-btn:active {
+            transform: scale(0.95);
+            background-color: #1a252f;
+        }
+
+        .go-btn img {
+            width: 50px;
+            height: 50px;
+            image-rendering: pixelated; 
+            margin-bottom: 8px;
+            object-fit: contain;
+        }
+
+        .go-btn span {
+            font-size: clamp(0.7rem, 1.5vw, 1rem);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div class="doom-ui-container">
+            <div id="ui-score" class="doom-ui-line">SCORE: 0</div>
+            <div id="ui-health" class="doom-ui-line">VITA: 100%</div>
+            <div id="ui-ammo" class="doom-ui-line">PROIETTILI: 12/12</div>
+        </div>
+
+        <canvas id="gameCanvas" width="320" height="240"></canvas>
+        <div id="damage-flash"></div>
+        
+        <div id="stamina-container">
+            <div id="stamina-bar-bg">
+                <div id="stamina-bar-fill"></div>
+            </div>
+            <div id="runner-icon">🏃</div>
+        </div>
+    </div>
+
+    <div id="game-over-screen" class="game-over-overlay">
+        <div class="game-over-box">
+            <h2>GAME OVER</h2>
+            <div id="final-score-display" class="final-score-text">PUNTEGGIO: 0</div>
+            <div class="game-over-menu">
+                <a href="index.html" class="go-btn">
+                    <img src="img/pio.3.png" alt="Home Icon" onerror="this.style.display='none'">
+                    <span>HOME</span>
+                </a>
+                <a href="rank.html" class="go-btn">
+                    <img src="img/pio.2.png" alt="Rank Icon" onerror="this.style.display='none'">
+                    <span>RANK</span>
+                </a>
+                <div class="go-btn" onclick="replayGame()">
+                    <img src="img/pio.1.png" alt="Replay Icon" onerror="this.style.display='none'">
+                    <span>REPLAY</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const damageFlash = document.getElementById('damage-flash');
+        const staminaContainer = document.getElementById('stamina-container');
+        const staminaBarFill = document.getElementById('stamina-bar-fill');
+        
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreDisplay = document.getElementById('final-score-display');
+
+        // Riferimenti ai nodi dell'interfaccia HTML
+        const uiScore = document.getElementById('ui-score');
+        const uiHealth = document.getElementById('ui-health');
+        const uiAmmo = document.getElementById('ui-ammo');
+
+        // TEXTURES
+        const wallTexture = new Image();
+        wallTexture.src = 'img/murobackromms.jpg';
+        let textureLoaded = false;
+        wallTexture.onload = () => { textureLoaded = true; };
+
+        const enemyTexture = new Image();
+        enemyTexture.src = 'img/kfcc.png';
+        let enemyTextureLoaded = false;
+        enemyTexture.onload = () => { enemyTextureLoaded = true; };
+
+        // AUDIO
+        const coinSound = new Audio('audio/coin.mp3');
+        const shootSound = new Audio('audio/sparo.mp3');
+        const hitSound = new Audio('audio/hit.mp3');
+        const stepSound = new Audio('audio/steps.mp3'); 
+        stepSound.volume = 0.5;
+
+        let audioContextUnlocked = false;
+        function unlockAudio() {
+            if (audioContextUnlocked) return;
+            stepSound.play().then(() => {
+                stepSound.pause();
+                audioContextUnlocked = true;
+            }).catch(() => {});
+        }
+
+        const MAP_WIDTH = 16;
+        const MAP_HEIGHT = 16;
+        const MAP_CELL_SIZE = 64;
+        const map = [
+            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+            1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,
+            1,0,1,1,0,0,1,0,1,1,1,1,0,1,0,1,
+            1,0,1,0,0,0,0,0,0,0,0,1,0,1,0,1,
+            1,0,1,0,1,1,1,1,1,0,0,1,0,1,0,1,
+            1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,1,
+            1,1,1,0,1,0,0,0,1,0,1,1,1,1,0,1,
+            1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,
+            1,0,1,1,1,1,0,1,1,0,1,0,1,1,0,1,
+            1,0,1,0,0,1,0,1,0,0,0,0,1,0,0,1,
+            1,0,1,0,0,1,0,1,1,1,1,1,1,0,1,1,
+            1,1,1,1,0,1,0,0,0,0,0,0,0,0,1,1,
+            1,0,0,0,0,1,1,1,1,0,1,1,1,0,1,1,
+            1,0,1,1,0,0,0,0,1,0,1,0,0,0,0,1,
+            1,0,0,0,0,1,1,0,0,0,1,0,0,1,0,1,
+            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+        ];
+
+        const player = {
+            x: 96, y: 96,
+            angle: Math.PI / 4,
+            fov: Math.PI / 3,
+            baseSpeed: 2.2,
+            sprintSpeed: 3.8,
+            currentSpeed: 2.2,
+            rotSpeed: 0.04,
+            health: 100,
+            ammo: 12,
+            maxAmmo: 12,
+            stamina: 100,
+            maxStamina: 100,
+            isWalking: false,
+            isSprinting: false,
+            damageCooldown: 0,
+            stepTimer: 0 
+        };
+
+        let enemies = [];
+        let items = []; 
+        let score = 0; 
+        let baseEnemySpeed = 1.2; 
+        let drinkSpawned = false; 
+
+        const weapon = { isShooting: false, frame: 0, cooldown: 0, bobbingTimer: 0 };
+        const depthBuffer = new Array(canvas.width);
+        const keys = { forward: false, backward: false, left: false, right: false, shift: false };
+
+        initEntities();
+        updateUI(); // Inizializza i testi dell'interfaccia
+
+        window.addEventListener('keydown', (e) => {
+            unlockAudio();
+            if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault(); 
+                if (player.health > 0) {
+                    shoot();
+                }
+                return;
+            }
+            handleKey(e, true);
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            if (e.key === ' ' || e.code === 'Space') return;
+            handleKey(e, false);
+        });
+
+        function handleKey(e, isDown) {
+            if (isDown && (e.key === 'r' || e.key === 'R')) {
+                if (player.health <= 0) { replayGame(); return; }
+            }
+            if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp')    keys.forward = isDown;
+            if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown')  keys.backward = isDown;
+            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft')  keys.left = isDown;
+            if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = isDown;
+            if (e.key === 'Shift') keys.shift = isDown;
+        }
+
+        function initEntities() {
+            enemies = [
+                { x: 300, y: 150, speed: baseEnemySpeed, alive: true, aggro: false },
+                { x: 600, y: 250, speed: baseEnemySpeed + 0.1, alive: true, aggro: false },
+                { x: 150, y: 800, speed: baseEnemySpeed - 0.1, alive: true, aggro: false },
+                { x: 850, y: 850, speed: baseEnemySpeed + 0.2, alive: true, aggro: false }
+            ];
+            items = [];
+            drinkSpawned = false;
+        }
+
+        function respawnSingleEnemy() {
+            let placed = false;
+            baseEnemySpeed += 0.05; 
+
+            while (!placed) {
+                let rx = Math.floor(Math.random() * MAP_WIDTH);
+                let ry = Math.floor(Math.random() * MAP_HEIGHT);
+                
+                if (map[ry * MAP_WIDTH + rx] === 0) {
+                    let enemyX = rx * MAP_CELL_SIZE + MAP_CELL_SIZE / 2;
+                    let enemyY = ry * MAP_CELL_SIZE + MAP_CELL_SIZE / 2;
+                    
+                    let dx = enemyX - player.x;
+                    let dy = enemyY - player.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if (dist > 150) {
+                        enemies.push({
+                            x: enemyX,
+                            y: enemyY,
+                            speed: baseEnemySpeed + (Math.random() * 0.3 - 0.15), 
+                            alive: true,
+                            aggro: true 
+                        });
+                        placed = true;
+                    }
+                }
+            }
+        }
+
+        function replayGame() {
+            gameOverScreen.style.display = "none";
+            player.x = 96; player.y = 96;
+            player.angle = Math.PI / 4;
+            player.health = 100;
+            player.ammo = player.maxAmmo;
+            player.stamina = player.maxStamina;
+            player.isWalking = false;
+            player.isSprinting = false;
+            player.damageCooldown = 0;
+            player.stepTimer = 0;
+            
+            score = 0;
+            baseEnemySpeed = 1.2;
+            weapon.isShooting = false; weapon.frame = 0; weapon.cooldown = 0; weapon.bobbingTimer = 0;
+            keys.forward = false; keys.backward = false; keys.left = false; keys.right = false; keys.shift = false;
+            
+            initEntities();
+            updateUI();
+            staminaContainer.style.display = "none";
+        }
+
+        function spawnItem(type) {
+            let placed = false;
+            while (!placed) {
+                let rx = Math.floor(Math.random() * MAP_WIDTH);
+                let ry = Math.floor(Math.random() * MAP_HEIGHT);
+                if (map[ry * MAP_WIDTH + rx] === 0) {
+                    items.push({
+                        x: rx * MAP_CELL_SIZE + MAP_CELL_SIZE / 2,
+                        y: ry * MAP_CELL_SIZE + MAP_CELL_SIZE / 2,
+                        alive: true,
+                        type: type 
+                    });
+                    placed = true;
+                }
+            }
+        }
+
+        function shoot() {
+            if (weapon.cooldown > 0 || player.health <= 0) return;
+            if (player.ammo <= 0) return; 
+
+            shootSound.currentTime = 0;
+            shootSound.play().catch(e => {});
+
+            player.ammo--;
+
+            weapon.isShooting = true; weapon.frame = 1; weapon.cooldown = 12;
+
+            let closestEnemy = null;
+            let minDistance = Infinity;
+
+            enemies.forEach(enemy => {
+                if (!enemy.alive) return;
+                let dx = enemy.x - player.x;
+                let dy = enemy.y - player.y;
+                let angleToEnemy = Math.atan2(dy, dx);
+                let diffAngle = angleToEnemy - player.angle;
+
+                while (diffAngle < -Math.PI) diffAngle += Math.PI * 2;
+                while (diffAngle > Math.PI) diffAngle -= Math.PI * 2;
+
+                if (Math.abs(diffAngle) < 0.12) {
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    let centerScreenX = Math.floor(canvas.width / 2);
+                    if (dist < depthBuffer[centerScreenX] && dist < minDistance) {
+                        minDistance = dist;
+                        closestEnemy = enemy;
+                    }
+                }
+            });
+
+            if (closestEnemy) {
+                closestEnemy.alive = false;
+                score++; 
+                enemies = enemies.filter(e => e.alive);
+                respawnSingleEnemy();
+            }
+
+            if (player.ammo === 0) {
+                spawnItem('ammo');
+            }
+
+            updateUI();
+        }
+
+        function updateUI() {
+            // Aggiorna l'interfaccia HTML in tempo reale con lo stile identico a flappy
+            uiScore.innerText = "SCORE: " + score;
+            uiHealth.innerText = "VITA: " + player.health + "%";
+            uiAmmo.innerText = "PROIETTILI: " + player.ammo + " DI " + player.maxAmmo;
+
+            if (player.health <= 0) {
+                handleGameOver();
+            }
+        }
+
+        function salvaPunteggio(punteggio) {
+            const nomeGiocatore = (localStorage.getItem("playerName") || "GUEST").toUpperCase();
+            let classifica = JSON.parse(localStorage.getItem("classifica_gioco_5")) || [];
+            const esistente = classifica.find(e => e.nome === nomeGiocatore);
+            if (esistente) {
+                if (punteggio <= esistente.punti) return;
+                esistente.punti = punteggio;
+            } else {
+                classifica.push({ nome: nomeGiocatore, punti: punteggio });
+            }
+            classifica.sort((a, b) => b.punti - a.punti);
+            classifica = classifica.slice(0, 50);
+            localStorage.setItem("classifica_gioco_5", JSON.stringify(classifica));
+        }
+
+        function handleGameOver() {
+            finalScoreDisplay.innerText = `PUNTEGGIO: ${score}`;
+            salvaPunteggio(score);
+            gameOverScreen.style.display = 'flex';
+        }
+
+        function updateGame() {
+            if (player.health <= 0) return; 
+
+            player.isWalking = (keys.forward || keys.backward);
+            
+            if (player.damageCooldown > 0) {
+                player.damageCooldown--;
+            }
+            
+            if (keys.shift && player.isWalking && player.stamina > 0) {
+                player.isSprinting = true;
+                player.currentSpeed = player.sprintSpeed;
+                player.stamina = Math.max(0, player.stamina - 0.7); 
+            } else {
+                player.isSprinting = false;
+                player.currentSpeed = player.baseSpeed;
+                player.stamina = Math.min(player.maxStamina, player.stamina + 0.3); 
+            }
+
+            if (player.isSprinting) {
+                staminaContainer.style.display = "flex";
+                staminaBarFill.style.width = player.stamina + "%";
+            } else {
+                staminaContainer.style.display = "none";
+            }
+
+            if (player.health < 85 && !drinkSpawned) {
+                spawnItem('drink');
+                drinkSpawned = true;
+            }
+
+            let moveX = 0; let moveY = 0;
+            if (keys.forward) {
+                moveX += Math.cos(player.angle) * player.currentSpeed;
+                moveY += Math.sin(player.angle) * player.currentSpeed;
+            }
+            if (keys.backward) {
+                moveX -= Math.cos(player.angle) * player.currentSpeed;
+                moveY -= Math.sin(player.angle) * player.currentSpeed;
+            }
+            if (keys.left)  player.angle -= player.rotSpeed;
+            if (keys.right) player.angle += player.rotSpeed;
+
+            if (player.isWalking) {
+                weapon.bobbingTimer += player.isSprinting ? 0.3 : 0.18;
+                player.stepTimer++;
+                let stepInterval = player.isSprinting ? 10 : 16; 
+                
+                if (player.stepTimer >= stepInterval) {
+                    stepSound.currentTime = 0;
+                    stepSound.playbackRate = player.isSprinting ? 1.5 : 1.0;
+                    stepSound.play().catch(e => {});
+                    player.stepTimer = 0; 
+                }
+            } else {
+                stepSound.pause();
+                stepSound.currentTime = 0; 
+
+                weapon.bobbingTimer = weapon.bobbingTimer % (Math.PI * 2);
+                if (weapon.bobbingTimer > 0) {
+                    weapon.bobbingTimer = Math.max(0, weapon.bobbingTimer - 0.2);
+                }
+                player.stepTimer = 0;
+            }
+
+            if (weapon.cooldown > 0) {
+                weapon.cooldown--;
+                if (weapon.cooldown < 8) weapon.frame = 0;
+            }
+
+            let newX = player.x + moveX;
+            let newY = player.y + moveY;
+            if (map[Math.floor(player.y / MAP_CELL_SIZE) * MAP_WIDTH + Math.floor(newX / MAP_CELL_SIZE)] === 0) player.x = newX;
+            if (map[Math.floor(newY / MAP_CELL_SIZE) * MAP_WIDTH + Math.floor(player.x / MAP_CELL_SIZE)] === 0) player.y = newY;
+
+            items.forEach(item => {
+                if (!item.alive) return;
+                let idx = item.x - player.x;
+                let idy = item.y - player.y;
+                let iDist = Math.sqrt(idx*idx + idy*idy);
+
+                if (iDist < 22) {
+                    item.alive = false;
+                    if (item.type === 'ammo') {
+                        player.ammo = player.maxAmmo;
+                    } else if (item.type === 'drink') {
+                        player.health = Math.min(100, player.health + 10); 
+                        drinkSpawned = false; 
+                    }
+                    coinSound.currentTime = 0;
+                    coinSound.play().catch(e => {});
+                    updateUI();
+                }
+            });
+
+            enemies.forEach(enemy => {
+                if (!enemy.alive) return;
+
+                let edx = player.x - enemy.x;
+                let edy = player.y - enemy.y;
+                let dist = Math.sqrt(edx*edx + edy*edy);
+
+                if (dist < 500) {
+                    enemy.aggro = true;
+                }
+
+                if (enemy.aggro && dist > 15) {
+                    let exMove = (edx / dist) * enemy.speed;
+                    let eyMove = (edy / dist) * enemy.speed;
+
+                    let checkEx = enemy.x + exMove;
+                    let checkEy = enemy.y + eyMove;
+
+                    if (map[Math.floor(enemy.y / MAP_CELL_SIZE) * MAP_WIDTH + Math.floor(checkEx / MAP_CELL_SIZE)] === 0) enemy.x = checkEx;
+                    if (map[Math.floor(checkEy / MAP_CELL_SIZE) * MAP_WIDTH + Math.floor(enemy.x / MAP_CELL_SIZE)] === 0) enemy.y = checkEy;
+                }
+
+                if (dist <= 22 && player.damageCooldown === 0) {
+                    player.health = Math.max(0, player.health - 10); 
+                    player.damageCooldown = 30; 
+                    
+                    hitSound.currentTime = 0;
+                    hitSound.play().catch(e => {});
+
+                    triggerDamageFlash();
+                    updateUI();
+                }
+            });
+        }
+
+        function triggerDamageFlash() {
+            damageFlash.style.opacity = "1";
+            setTimeout(() => { damageFlash.style.opacity = "0"; }, 60);
+        }
+
+        function renderGame() {
+            ctx.fillStyle = '#5a5a5a'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
+            ctx.fillStyle = '#473f21'; 
+            ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+
+            for (let i = 0; i < canvas.width; i++) {
+                let rayAngle = (player.angle - player.fov / 2) + (i / canvas.width) * player.fov;
+                let distance = 0;
+                let hitWall = false;
+                let sideHit = false; 
+
+                let cos = Math.cos(rayAngle);
+                let sin = Math.sin(rayAngle);
+                let hitX = 0; let hitY = 0;
+
+                while (!hitWall && distance < 800) {
+                    distance += 1.2;
+                    hitX = (player.x + cos * distance);
+                    hitY = (player.y + sin * distance);
+
+                    let cellX = Math.floor(hitX / MAP_CELL_SIZE);
+                    let cellY = Math.floor(hitY / MAP_CELL_SIZE);
+
+                    if (cellX < 0 || cellX >= MAP_WIDTH || cellY < 0 || cellY >= MAP_HEIGHT) {
+                        hitWall = true; distance = 800;
+                    } else if (map[cellY * MAP_WIDTH + cellX] > 0) {
+                        hitWall = true;
+                        let edgeX = hitX - (cellX * MAP_CELL_SIZE);
+                        let edgeY = hitY - (cellY * MAP_CELL_SIZE);
+                        if (Math.min(edgeX, MAP_CELL_SIZE - edgeX) < Math.min(edgeY, MAP_CELL_SIZE - edgeY)) sideHit = true;
+                    }
+                }
+
+                let correctedDistance = distance * Math.cos(rayAngle - player.angle);
+                if (correctedDistance < 1) correctedDistance = 1;
+                depthBuffer[i] = correctedDistance;
+
+                let wallHeight = (MAP_CELL_SIZE / correctedDistance) * 240;
+                let wallTop = (canvas.height - wallHeight) / 2;
+
+                let textureX = 0;
+                if (textureLoaded) {
+                    if (sideHit) textureX = Math.floor(hitY % MAP_CELL_SIZE);
+                    else textureX = Math.floor(hitX % MAP_CELL_SIZE);
+                    textureX = Math.floor((textureX / MAP_CELL_SIZE) * wallTexture.width);
+                    
+                    ctx.drawImage(wallTexture, textureX, 0, 1, wallTexture.height, i, wallTop, 1, wallHeight);
+
+                    let shadowFactor = Math.max(0, 1 - (correctedDistance / 450));
+                    let ambientDim = sideHit ? 0.6 : 1.0;
+                    let finalOpacity = 1 - (shadowFactor * ambientDim);
+
+                    if (finalOpacity > 0) {
+                        ctx.fillStyle = `rgba(0, 0, 0, ${finalOpacity})`;
+                        ctx.fillRect(i, wallTop, 1, wallHeight);
+                    }
+                } else {
+                    let r = 185, g = 175, b = 110;
+                    if (sideHit) { r *= 0.75; g *= 0.75; b *= 0.75; }
+                    let shadowFactor = Math.max(0, 1 - (correctedDistance / 450));
+                    ctx.fillStyle = `rgb(${Math.floor(r*shadowFactor)}, ${Math.floor(g*shadowFactor)}, ${Math.floor(b*shadowFactor)})`;
+                    ctx.fillRect(i, wallTop, 1, wallHeight);
+                }
+            }
+
+            renderSprites();
+
+            if (player.health > 0) renderWeapon();
+
+            renderMinimap();
+            // Eliminata la vecchia funzione drawScore dal canvas che sgranava
+        }
+
+        function renderSprites() {
+            let allSprites = [];
+            enemies.forEach(e => { if(e.alive) allSprites.push(Object.assign({type: 'enemy'}, e)); });
+            items.forEach(p => { if(p.alive) allSprites.push(p); });
+
+            allSprites.forEach(s => { s.distance = Math.sqrt((s.x - player.x)**2 + (s.y - player.y)**2); });
+            allSprites.sort((a, b) => b.distance - a.distance);
+
+            allSprites.forEach(sprite => {
+                let dx = sprite.x - player.x;
+                let dy = sprite.y - player.y;
+                let angleToSprite = Math.atan2(dy, dx);
+                let diffAngle = angleToSprite - player.angle;
+
+                while (diffAngle < -Math.PI) diffAngle += Math.PI * 2;
+                while (diffAngle > Math.PI) diffAngle -= Math.PI * 2;
+
+                if (Math.abs(diffAngle) > player.fov) return;
+
+                let spriteScreenX = Math.floor((canvas.width / 2) + (diffAngle / player.fov) * canvas.width);
+                let isItem = (sprite.type === 'ammo' || sprite.type === 'drink');
+                let scaleFactor = isItem ? 80 : 200;
+                let spriteSize = Math.min(240, (MAP_CELL_SIZE / sprite.distance) * scaleFactor); 
+
+                if (spriteSize <= 0) return;
+
+                let yOffset = isItem ? (spriteSize * 0.9) : (spriteSize * 0.12);
+                let spriteScreenY = canvas.height / 2 + yOffset; 
+                
+                let startX = Math.floor(spriteScreenX - spriteSize / 2);
+                let endX = Math.floor(spriteScreenX + spriteSize / 2);
+
+                for (let x = startX; x < endX; x++) {
+                    if (x >= 0 && x < canvas.width && sprite.distance < depthBuffer[x]) {
+                        let relativeX = (x - startX) / spriteSize;
+                        let topY = Math.floor(spriteScreenY - spriteSize / 2);
+                        let bottomY = Math.floor(spriteScreenY + spriteSize / 2);
+                        let currentHeight = bottomY - topY;
+
+                        if (sprite.type === 'enemy') {
+                            if (enemyTextureLoaded) {
+                                let texX = Math.floor(relativeX * enemyTexture.width);
+                                ctx.drawImage(enemyTexture, texX, 0, 1, enemyTexture.height, x, topY, 1, currentHeight);
+                            } else {
+                                ctx.fillStyle = '#b8141a'; ctx.fillRect(x, topY, 1, currentHeight);
+                            }
+                        } else {
+                            for (let y = topY; y < bottomY; y++) {
+                                let relativeY = (y - topY) / currentHeight;
+                                if (relativeX > 0.25 && relativeX < 0.75 && relativeY > 0.35 && relativeY < 0.9) {
+                                    if (sprite.type === 'ammo') {
+                                        ctx.fillStyle = (relativeY < 0.55) ? '#444' : '#d4af37';
+                                    } else { 
+                                        ctx.fillStyle = (relativeY < 0.6) ? '#b8141a' : '#144cb8';
+                                    }
+                                    ctx.fillRect(x, y, 1, 1);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderWeapon() {
+            let gunX = canvas.width / 2;
+            let gunY = canvas.height;
+
+            if (weapon.bobbingTimer > 0) {
+                gunX += Math.sin(weapon.bobbingTimer) * 5;
+                gunY += Math.abs(Math.cos(weapon.bobbingTimer)) * 3;
+            }
+
+            ctx.save();
+            if (weapon.frame === 0) {
+                ctx.fillStyle = '#333'; ctx.fillRect(gunX - 7, gunY - 45, 14, 45);
+                ctx.fillStyle = '#555'; ctx.fillRect(gunX - 11, gunY - 28, 22, 28);
+            } else {
+                gunY += 6;
+                ctx.fillStyle = '#333'; ctx.fillRect(gunX - 7, gunY - 40, 14, 40);
+                ctx.fillStyle = '#555'; ctx.fillRect(gunX - 11, gunY - 26, 22, 26);
+                ctx.fillStyle = '#ff8800'; ctx.beginPath(); ctx.arc(gunX, gunY - 43, 12, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ffff00'; ctx.beginPath(); ctx.arc(gunX, gunY - 43, 6, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.restore();
+
+            ctx.fillStyle = (player.ammo > 0) ? 'rgba(255, 255, 0, 0.4)' : 'rgba(255, 0, 0, 0.7)';
+            ctx.fillRect(canvas.width / 2 - 3, canvas.height / 2, 7, 1);
+            ctx.fillRect(canvas.width / 2, canvas.height / 2 - 3, 1, 7);
+        }
+
+        function renderMinimap() {
+            const scale = 0.05; const size = MAP_CELL_SIZE * scale;
+            const minimapX = canvas.width - (MAP_WIDTH * size) - 10;
+            const minimapY = canvas.height - (MAP_HEIGHT * size) - 10;
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; ctx.fillRect(minimapX, minimapY, MAP_WIDTH * size, MAP_HEIGHT * size);
+
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                for (let x = 0; x < MAP_WIDTH; x++) {
+                    if (map[y * MAP_WIDTH + x] > 0) {
+                        ctx.fillStyle = 'rgba(150, 155, 110, 0.5)'; 
+                        ctx.fillRect(minimapX + (x * size), minimapY + (y * size), size - 0.5, size - 0.5);
+                    }
+                }
+            }
+
+            items.forEach(item => {
+                if (!item.alive) return;
+                ctx.fillStyle = (item.type === 'ammo') ? '#00ffff' : '#ff00bb'; 
+                ctx.fillRect(minimapX + (item.x * scale) - 1, minimapY + (item.y * scale) - 1, 3, 3);
+            });
+
+            enemies.forEach(enemy => {
+                if (!enemy.alive) return;
+                ctx.fillStyle = enemy.aggro ? '#ff3300' : '#ffff00'; 
+                ctx.fillRect(minimapX + (enemy.x * scale) - 1, minimapY + (enemy.y * scale) - 1, 3, 3);
+            });
+
+            const pMinimapX = minimapX + (player.x * scale);
+            const pMinimapY = minimapY + (player.y * scale);
+            ctx.save(); ctx.fillStyle = '#00ff00'; ctx.beginPath();
+            ctx.moveTo(pMinimapX + Math.cos(player.angle) * 5, pMinimapY + Math.sin(player.angle) * 5);
+            ctx.lineTo(pMinimapX + Math.cos(player.angle + 2.5) * 4, pMinimapY + Math.sin(player.angle + 2.5) * 4);
+            ctx.lineTo(pMinimapX + Math.cos(player.angle - 2.5) * 4, pMinimapY + Math.sin(player.angle - 2.5) * 4);
+            ctx.closePath(); ctx.fill(); ctx.restore();
+        }
+
+        function gameLoop() {
+            updateGame();
+            renderGame();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+	<a href="play.html"> 
+        <img src="img/freccia.png" alt="Indietro" class="back-arrow" style="transform: rotate(00deg); z-index: 67;">
+    </a>
+</body>
+</html>

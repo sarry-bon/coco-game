@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLAPPY</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="stile-score.css"> 
+    <style>
+        @font-face {
+            font-family: 'KarmaticArcade';
+            src: url('font/ka1.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #3eccdc;
+            overflow: hidden;
+            font-family: 'KarmaticArcade', sans-serif;
+        }
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        /* Schermata Trasparente Scura di Game Over */
+        .game-over-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.85); 
+            display: none; 
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            backdrop-filter: blur(2px); 
+        }
+
+        /* Riquadro centrale */
+        .game-over-box {
+            background-color: #2c3e50;
+            border: 6px solid #e74c3c;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 0 #000;
+            max-width: 500px;
+            width: 85%;
+        }
+
+        .game-over-box h2 {
+            color: #e74c3c;
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            margin: 0 0 25px 0;
+            text-shadow: 3px 3px #000;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        /* Contenitore dei 3 pulsanti */
+        .game-over-menu {
+            display: flex;
+            justify-content: space-around;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        /* Stile singoli pulsanti */
+        .go-btn {
+            background-color: #34495e;
+            border: 4px solid #000;
+            color: #fff;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            width: 30%;
+            transition: transform 0.1s;
+            text-decoration: none;
+        }
+
+        .go-btn:active {
+            transform: scale(0.95);
+            background-color: #1a252f;
+        }
+
+        .go-btn img {
+            width: 50px;
+            height: 50px;
+            image-rendering: pixelated; 
+            margin-bottom: 8px;
+            object-fit: contain;
+        }
+
+        .go-btn span {
+            font-size: clamp(0.7rem, 1.5vw, 1rem);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <a href="play.html"> 
+        <img src="img/frecciasu.png" alt="Indietro" class="back-arrow" style="transform: rotate(0deg);"> 
+    </a>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="game-over-screen" class="game-over-overlay">
+        <div class="game-over-box">
+            <h2>GAME OVER</h2>
+            <div class="game-over-menu">
+                <a href="index.html" class="go-btn">
+                    <img src="img/pio.3.png" alt="Home Icon">
+                    <span>HOME</span>
+                </a>
+                <a href="rank.html" class="go-btn">
+                    <img src="img/pio.2.png" alt="Rank Icon">
+                    <span>RANK</span>
+                </a>
+                <div class="go-btn" onclick="resetGame()">
+                    <img src="img/pio.1.png" alt="Replay Icon">
+                    <span>REPLAY</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const gameOverScreen = document.getElementById("game-over-screen");
+
+        // --- GESTIONE AUDIO ---
+        const bgMusic = new Audio('audio/flappy.mp3');
+        bgMusic.loop = true; 
+
+        const bipSound = new Audio('audio/fah.mp3');
+        
+        const gameOverSound1 = new Audio('audio/gameover1.mp3');
+        const gameOverSound2 = new Audio('audio/gameover.mp3');
+        // ----------------------
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.imageSmoothingEnabled = false;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const birdImg1 = new Image();
+        birdImg1.src = 'img/coco1.png';
+        const birdImg2 = new Image();
+        birdImg2.src = 'img/coco2.png';
+
+        const eggImg1 = new Image();
+        eggImg1.src = 'img/uovo1.png';
+        const eggImg2 = new Image();
+        eggImg2.src = 'img/uovo2.png';
+        const eggImg3 = new Image();
+        eggImg3.src = 'img/uovo3.png';
+
+        const pipeTopImg = new Image();
+        pipeTopImg.src = 'img/tubo_su.png';
+        const pipeBottomImg = new Image();
+        pipeBottomImg.src = 'img/tubo_giù.png';
+
+        let frames = 0;
+        let score = 0;
+        let pipeCount = 0; 
+        let gameOver = false;
+
+        // Funzione per aggirare il blocco della riproduzione dei browser
+        function avviaMusica() {
+            bgMusic.play().catch(error => {
+                console.log("Musica bloccata dal browser, partirà alla prima interazione.");
+            });
+        }
+
+        const bird = {
+            x: 120,
+            y: window.innerHeight / 2,
+            width: 240,   
+            height: 190,  
+            velocity: 0,
+            gravity: 0.5,    
+            jumpLimit: -10,  
+
+            draw() {
+                let currentImg = (Math.floor(frames / 8) % 2 === 0) ? birdImg1 : birdImg2;
+                if (currentImg.complete) {
+                    ctx.drawImage(currentImg, Math.floor(this.x), Math.floor(this.y), this.width, this.height);
+                } else {
+                    ctx.fillStyle = "yellow";
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                }
+            },
+            update() {
+                this.velocity += this.gravity;
+                this.y += this.velocity;
+                if (canvas.height > 0 && (this.y + this.height >= canvas.height || this.y <= 0)) {
+                    innescaGameOver();
+                }
+            },
+            jump() {
+                this.velocity = this.jumpLimit;
+            }
+        };
+
+        const prizes = {
+            items: [],
+            width: 120,
+            height: 150,
+
+            draw() {
+                this.items.forEach(egg => {
+                    let eggImgs = [eggImg1, eggImg2, eggImg3];
+                    let currentEggImg = eggImgs[Math.floor(frames / 6) % 3];
+
+                    if (currentEggImg.complete) {
+                        let floatingY = egg.y + Math.sin(frames / 10) * 15;
+                        ctx.drawImage(currentEggImg, Math.floor(egg.x), Math.floor(floatingY), this.width, this.height);
+                    }
+                });
+            },
+            update() {
+                for (let i = 0; i < this.items.length; i++) {
+                    let egg = this.items[i];
+                    egg.x -= 4.5; 
+
+                    if (bird.x < egg.x + this.width &&
+                        bird.x + bird.width > egg.x &&
+                        bird.y < egg.y + this.height &&
+                        bird.y + bird.height > egg.y) {
+                        score += 1000;
+                        
+                        // Riproduce il suono del bip quando mangia l'uovo
+                        bipSound.currentTime = 0;
+                        bipSound.play().catch(e => console.log("Errore bip:", e));
+
+                        this.items.splice(i, 1);
+                        i--;
+                        continue;
+                    }
+
+                    if (egg.x + this.width < 0) {
+                        this.items.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+        };
+
+        const pipes = {
+            items: [],
+            width: 160,
+            gap: 380, 
+            dx: 4.5,
+
+            draw() {
+                this.items.forEach(p => {
+                    if (pipeTopImg.complete) {
+                        const ratioTop = pipeTopImg.height / pipeTopImg.width;
+                        const hTop = this.width * ratioTop;
+                        ctx.drawImage(pipeTopImg, Math.floor(p.x), Math.floor(p.y - hTop), this.width, hTop);
+                    }
+                    if (pipeBottomImg.complete) {
+                        const ratioBot = pipeBottomImg.height / pipeBottomImg.width;
+                        const hBot = this.width * ratioBot;
+                        ctx.drawImage(pipeBottomImg, Math.floor(p.x), Math.floor(p.y + this.gap), this.width, hBot);
+                    }
+                });
+            },
+
+            update() {
+                if (frames === 1 || (frames > 1 && frames % 160 === 0)) {
+                    pipeCount++;
+                    let pipeY = Math.floor(Math.random() * (canvas.height - this.gap - 300)) + 150;
+                    
+                    this.items.push({
+                        x: canvas.width,
+                        y: pipeY,
+                        passed: false
+                    });
+
+                    if (pipeCount % 10 === 0) {
+                        prizes.items.push({
+                            x: canvas.width + 450, 
+                            y: canvas.height / 2 - 75 
+                        });
+                    }
+                }
+
+                for (let i = 0; i < this.items.length; i++) {
+                    let p = this.items[i];
+                    p.x -= this.dx;
+
+                    if (bird.x + bird.width * 0.7 > p.x && bird.x + bird.width * 0.2 < p.x + this.width &&
+                        (bird.y + bird.height * 0.2 < p.y || bird.y + bird.height * 0.8 > p.y + this.gap)) {
+                        innescaGameOver();
+                    }
+
+                    if (p.x + this.width < bird.x && !p.passed) {
+                        score += 10;
+                        p.passed = true;
+                    }
+
+                    if (p.x + this.width < 0) {
+                        this.items.shift();
+                        i--;
+                    }
+                }
+            },
+            reset() { 
+                this.items = []; 
+                prizes.items = [];
+                pipeCount = 0;
+            }
+        };
+
+        // Funzione centralizzata per gestire la sconfitta e far partire i suoni
+        function innescaGameOver() {
+            if (!gameOver) {
+                gameOver = true;
+                bgMusic.pause(); // Ferma la musica di sottofondo
+
+                // Riproduce i due suoni di game over contemporaneamente
+                gameOverSound1.play().catch(e => console.log("Errore audio go1:", e));
+                gameOverSound2.play().catch(e => console.log("Errore audio go2:", e));
+            }
+        }
+
+        function drawScore() {
+            const compStyles = window.getComputedStyle(document.documentElement);
+            const fontName = compStyles.getPropertyValue('--score-font').trim() || 'sans-serif';
+            const scoreColor = compStyles.getPropertyValue('--score-color').trim() || '#ffffff';
+            const shadowColor = compStyles.getPropertyValue('--score-shadow').trim() || '#000000';
+            
+            let fontSize = Math.max(24, Math.min(window.innerWidth * 0.04, 40));
+            
+            ctx.save();
+            ctx.font = `900 ${fontSize}px ${fontName}`;
+            ctx.textBaseline = "top";
+            
+            ctx.fillStyle = shadowColor;
+            ctx.fillText("SCORE: " + score, 20 + 3, 20 + 3);
+            
+            ctx.fillStyle = scoreColor;
+            ctx.fillText("SCORE: " + score, 20, 20);
+            ctx.restore();
+        }
+
+        function showGameOverScreen() {
+            gameOverScreen.style.display = "flex";
+        }
+
+        function loop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.imageSmoothingEnabled = false;
+
+            if (!gameOver) {
+                bird.update();
+                pipes.update();
+                prizes.update();
+                frames++;
+            }
+
+            pipes.draw();
+            prizes.draw();
+            bird.draw();
+            drawScore();
+
+            if (gameOver) {
+                showGameOverScreen();
+                if (!window.salvato) {
+                    salvaPunteggio();
+                    window.salvato = true;
+                }
+            } else {
+                window.salvato = false; 
+            }
+
+            requestAnimationFrame(loop);
+        }
+
+        function salvaPunteggio() {
+            const nomeGiocatore = localStorage.getItem("playerName") || "GUEST";
+            const nuovoPunteggio = { 
+                nome: nomeGiocatore.toUpperCase(), 
+                punti: parseInt(score) 
+            };
+            let classifica = JSON.parse(localStorage.getItem("classifica_gioco_4")) || [];
+            classifica.push(nuovoPunteggio);
+            classifica.sort((a, b) => b.punti - a.punti);
+            classifica = classifica.slice(0, 50);
+            localStorage.setItem("classifica_gioco_4", JSON.stringify(classifica));
+        }
+
+        function resetGame() {
+            gameOverScreen.style.display = "none";
+            bird.y = canvas.height / 2;
+            bird.velocity = 0;
+            pipes.reset();
+            score = 0;
+            frames = 0;
+            gameOver = false;
+
+            // Interrompe i suoni di game over al riavvio
+            gameOverSound1.pause();
+            gameOverSound1.currentTime = 0;
+            gameOverSound2.pause();
+            gameOverSound2.currentTime = 0;
+
+            bgMusic.currentTime = 0;
+            avviaMusica();
+        }
+
+        document.addEventListener("keydown", (e) => {
+            avviaMusica(); // Attiva la musica al primo input dell'utente
+
+            if (e.code === "Space") {
+                e.preventDefault(); 
+                if (gameOver) resetGame();
+                else bird.jump();
+            }
+        });
+
+        window.addEventListener("mousedown", (e) => {
+            avviaMusica(); // Attiva la musica al primo click
+
+            if (gameOver) {
+                if (gameOverScreen.contains(e.target)) {
+                    return; 
+                }
+                resetGame();
+            } else {
+                bird.jump();
+            }
+        });
+
+        setTimeout(() => {
+            bird.y = canvas.height / 2;
+            avviaMusica();
+            loop();
+        }, 10);
+    </script>
+</body>
+</html>

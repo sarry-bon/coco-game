@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>COCO ARCADE</title>
+
+<link rel="stylesheet" href="style.css">
+
+<style>
+
+    body.page-html{
+        margin:0;
+        padding:0;
+
+        width:100%;
+        height:100vh;
+
+        overflow:hidden;
+
+        display:flex;
+        justify-content:center;
+        align-items:center;
+
+        position:relative;
+
+        background-color: #000000; 
+        
+        background-image: 
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.22) 0%, rgba(255, 255, 255, 0.28) 50%, rgba(0, 0, 0, 0.25) 100%),
+        linear-gradient(90deg, 
+            #75dad7 0%, #75dad7 50%,  
+            #63c9d3 50%, #5fcdd0 100% 
+        );
+        background-size: 100% 100%, 180px 100%;
+    }
+
+    .background-animation{
+        position:fixed;
+
+        top:0;
+        left:0;
+
+        width:100vw;
+        height:100vh;
+
+        z-index:-3;
+
+        background-repeat:no-repeat;
+
+        background-position:center top;
+
+        background-size:35% auto;
+
+        image-rendering:pixelated;
+        image-rendering:crisp-edges;
+
+        animation:changeFrame 2s infinite steps(1);
+    }
+
+    @keyframes changeFrame{
+
+        0%{
+            background-image:url('img/frame1.png');
+        }
+
+        25%{
+            background-image:url('img/frame2.png');
+        }
+
+        50%{
+            background-image:url('img/frame3.png');
+        }
+
+        75%{
+            background-image:url('img/frame4.png');
+        }
+
+        100%{
+            background-image:url('img/frame1.png');
+        }
+    }
+
+    .arcade-screen{
+        position:fixed;
+        inset:0;
+
+        z-index:-2;
+
+        pointer-events:none;
+
+        box-shadow:
+            inset 0 0 120px rgba(0,0,0,0.35);
+    }
+
+    .arcade-screen::before{
+        content:"";
+
+        position:absolute;
+        inset:0;
+
+        background-image:
+            linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+
+        background-size:6px 6px;
+
+        opacity:0.25;
+
+        mix-blend-mode:overlay;
+    }
+
+    .arcade-screen::after{
+        content:"";
+
+        position:absolute;
+        inset:0;
+
+        background:
+            radial-gradient(
+                ellipse at center,
+                rgba(255,255,255,0.08) 0%,
+                rgba(0,0,0,0.15) 100%
+            );
+
+        opacity:0.6;
+    }
+
+    .arcade-title{
+        position:fixed;
+
+        top:23%;
+        left:50%;
+
+        transform:translateX(-50%);
+
+        z-index:20;
+
+        text-align:center;
+
+        color:white;
+
+        font-family: 'KarmaticArcade', monospace;
+
+        text-transform:uppercase;
+
+        letter-spacing:0.3em;
+
+        text-shadow:
+            0 0 10px rgba(255,255,255,0.4),
+            0 0 25px rgba(0,0,0,0.5);
+    }
+
+    .arcade-title .small{
+        display:block;
+        font-size:4rem;
+    }
+
+    .arcade-title .big{
+        display:block;
+        font-size:6rem;
+    }
+
+    .floor{
+        position:fixed;
+
+        bottom:0;
+        left:0;
+
+        width:100%;
+        height:30vh;
+
+        background-image:url('img/erba.png');
+
+        background-size:100% auto;
+        background-repeat:no-repeat;
+        background-position:bottom center;
+
+        image-rendering:pixelated;
+        image-rendering:crisp-edges;
+
+        z-index:1;
+    }
+
+    /* CONTENITORE PRINCIPALE DEI BOTTONI */
+    .menu-container{
+        position:fixed;
+
+        bottom:7.5vh;
+        left:50%;
+
+        transform:translateX(-50%);
+
+        display:flex;
+        align-items:flex-end; 
+        justify-content:center;
+
+        /* Gap azzerato: la vicinanza è gestita dai margini negativi del Play */
+        gap: 0; 
+
+        width: max-content;
+
+        z-index:10;
+    }
+
+    /* STRUTTURA BASE DEI BOTTONI */
+    .btn{
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration:none;
+        transition:transform 0.2s;
+    }
+
+    /* STRUTTURA DEL TESTO SOPRA I BOTTONI */
+    .btn-text {
+        position: absolute;
+        top: 0%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        pointer-events: none;
+        
+        text-align: center;
+        color: white;
+        font-family: 'KarmaticArcade', monospace;
+        text-transform: uppercase;
+        
+        letter-spacing: 0.3em;
+        padding-left: 0.3em; 
+        
+        white-space: nowrap;
+        
+        text-shadow:
+            0 0 10px rgba(255,255,255,0.4),
+            0 0 25px rgba(0,0,0,0.5);
+    }
+
+    /* GESTIONE LIVELLI (Z-INDEX) E MARGINI DI INCASTRO */
+    .btn-side {
+        z-index: 1; /* Sotto al bottone centrale di base */
+    }
+
+    .btn-main {
+        z-index: 5; /* Sempre sopra a INFO e RANK di base */
+        
+        /* Forza l'avvicinamento dei bottoni laterali. 
+           Rendi il numero ancora più negativo (es: -60px) se li vuoi ancora più vicini */
+        margin-left: -40px;
+        margin-right: -40px;
+    }
+
+    /* GRANDEZZA TESTI */
+    .btn-main .btn-text {
+        top: 35%;
+        font-size: clamp(30px, 3.5vw, 54px); 
+    }
+
+    .btn-side .btn-text {
+        font-size: clamp(24px, 2.8vw, 46px); 
+    }
+
+    .btn-info .btn-text {
+        top: 35%;
+        left: 50%;
+    }
+
+    .btn-rank .btn-text {
+        top: 45%;
+        left: 50%;
+    }
+
+    /* GRANDEZZA DELLE IMMAGINI */
+    .btn img{
+        width: clamp(250px, 25vw, 550px);
+        display: block;
+
+        image-rendering:pixelated;
+        image-rendering:crisp-edges;
+    }
+
+    .btn-main img{
+        width: clamp(280px, 28vw, 600px);
+    }
+
+    /* GESTIONE HOVER: EFFETTI ALLARGAMENTO SENZA COPRIRE IL PLAY */
+    .btn:hover {
+        transform: scale(1.1);
+    }
+
+    /* Quando passi sopra a un bottone laterale, rimane COMUNQUE sotto al Play (z-index inferiore a 5) */
+    .btn-side:hover {
+        z-index: 2; 
+    }
+
+    /* Quando passi sopra al Play, va in primissimo piano assoluto */
+    .btn-main:hover {
+        z-index: 10; 
+    }
+
+</style>
+</head>
+
+<body class="page-html">
+
+    <div class="background-animation"></div>
+
+    <div class="arcade-screen"></div>
+
+    <div class="arcade-title">
+        <span class="small">COCO</span>
+        <span class="big">ARCADE</span>
+    </div>
+
+    <div class="floor"></div>
+
+    <main class="menu-container">
+
+        <a href="instructions.html" class="btn btn-side btn-info">
+            <span class="btn-text">info</span>
+            <img src="img/instruction.png" alt="Instructions">
+        </a>
+
+        <a href="play.html" class="btn btn-main">
+            <span class="btn-text">play</span>
+            <img src="img/play.png" alt="Play">
+        </a>
+
+        <a href="rank.html" class="btn btn-side btn-rank">
+            <span class="btn-text">rank</span>
+            <img src="img/rank.png" alt="Rank">
+        </a>
+
+    </main>
+
+</body>
+</html>

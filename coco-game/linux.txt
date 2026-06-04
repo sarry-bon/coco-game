@@ -1,0 +1,222 @@
+# =========================================================
+# SUPER VERIFICONE LINUX 💀🔥
+# =========================================================
+#
+# REGOLE:
+# - NON usare interfaccia grafica
+# - Usa SOLO terminale
+# - Attenzione a:
+#   >   >>   |   < 
+# - Attenzione a:
+#   percorsi assoluti e relativi
+# - Usa:
+#   grep, awk, sort, wc, cut, tail, head
+#
+# =========================================================
+# PARTE 1 - CREAZIONE STRUTTURA
+# =========================================================
+
+# 1) Vai nella home directory  cd
+
+# 2) Crea con UN SOLO comando questa struttura:
+#mkdir -p azienda/backup/personale{vendite,amministrazione,personale}
+# azienda
+# ├── personale
+# │   ├── vendite
+# │   ├── amministrazione
+# │   └── personale
+# └── backup
+
+# 3) Entra nella cartella vendite usando percorso relativo
+
+# 4) Mostra il percorso assoluto della cartella corrente
+
+# 5) Torna alla home directory con un solo comando cd
+
+# =========================================================
+# PARTE 2 - CREAZIONE FILE TABELLA
+# =========================================================
+
+# 6) Crea il file dipendenti.txt dentro: nano dipendenti.txt
+#
+# azienda/personale
+#
+# 7) Inserisci questi dati: fatto
+#
+# Anna_Bianchi 22 VENDITE 12
+# Alice_Bruni 23 AMMINISTRAZIONE 2
+# Beatrice_Biondi 31 PERSONALE 1
+# Carlo_Canova 45 VENDITE 12
+# Dora_Dorati 32 VENDITE 13
+# Daniele_Danieli 40 AMMINISTRAZIONE 2
+# Enrico_Enna 38 PERSONALE 1
+# Giorgio_De_Giorgi 51 VENDITE 14
+# Giovanni_Guidi 55 AMMINISTRAZIONE 3
+
+# 8) Mostra il contenuto del file
+ cat dipendenti.txt
+# 9) Mostra SOLO le prime 4 righe
+head -4 dipendenti.txt
+# 10) Mostra SOLO le ultime 3 righe
+tail -3 dipendenti.txt
+# 11) Mostra SOLO le righe dalla 3 alla 6
+sed -n '3,6p' dipendenti.txt
+# =========================================================
+# PARTE 3 - GREP / AWK / FILTRI
+# =========================================================
+
+# 12) Mostra SOLO i nomi dei dipendenti
+cut -f1 dipendenti.txt
+# 13) Mostra SOLO le età
+cut -f2 dipendenti.txt
+# 14) Mostra SOLO i dipendenti del reparto VENDITE
+grep vendite dipendenti.txt |cut -f1
+# 15) Mostra SOLO i dipendenti tra i 30 e i 39 anni
+
+# 16) Conta quante persone lavorano in VENDITE
+grep vendite dipendenti.txt |cut -f1 | wc -l
+# 17) Conta quante persone stanno nell’ufficio 12
+grep 12 dipendenti.txt |cut -f4 | wc -l
+# 18) Mostra SOLO i nomi delle persone dell’ufficio 2
+
+# 19) Mostra SOLO le righe che NON contengono PERSONALE
+grep -v personale dipendenti.txt
+# 20) Ordina alfabeticamente il file
+sort dipententi.txt
+# 21) Mostra SOLO i reparti SENZA duplicati
+sort -u dipendenti.txt | cut -f3
+# 22) Conta quante righe contiene il file
+wc -l dipendenti.txt
+# =========================================================
+# PARTE 4 - REDIREZIONI
+# =========================================================
+
+# 23) Salva i reparti SENZA duplicati dentro:
+#sort -u dipendenti.txt | cut -f3 > settori.txt
+# SETTORI.txt
+
+# 24) Aggiungi la data SENZA cancellare il contenuto
+date > settori.txt
+# 25) Aggiungi anche:
+#     "Numero dipendenti:"
+#     seguito dal numero totale di righe del file
+
+# 26) Mostra il contenuto finale di SETTORI.txt
+cat settori.txt
+# =========================================================
+# PARTE 5 - PIPELINE
+# =========================================================
+
+# 27) Conta quanti file/cartelle ci sono nella directory corrente
+
+# 28) Cerca la parola "VENDITE"
+#     e conta quante righe la contengono
+
+# 29) Mostra le ultime 5 righe di dipendenti.txt
+#     e salvale in output.txt
+
+# 30) Mostra SOLO la prima colonna del file
+#     usando una pipe
+
+# =========================================================
+# PARTE 6 - PERMESSI
+# =========================================================
+
+# 31) Dai questi permessi a dipendenti.txt:
+#
+# proprietario -> rwx
+# gruppo -> r-x
+# altri -> ---
+#
+# Scrivi:
+# - forma numerica
+# - forma simbolica
+
+# 32) Rendi la cartella backup accessibile SOLO al proprietario
+
+# 33) Togli tutti i permessi agli altri utenti
+#     sul file dipendenti.txt
+
+# =========================================================
+# PARTE 7 - CONCATENAZIONI
+# =========================================================
+
+# 34) Spiega differenza tra:
+#
+# ;
+# &&
+# ||
+# |
+
+# 35) Scrivi un comando che:
+#
+# - crea a.txt
+# - crea b.txt
+# - mostra elenco file
+#
+# usando ;
+
+# 36) Scrivi un comando che:
+#
+# - crea verifica.txt
+# - SOLO SE riesce stampa:
+#   "OK"
+#
+# usando &&
+
+# =========================================================
+# PARTE 8 - SCRIPT BASH
+# =========================================================
+
+# 37) Scrivi uno script cerca_ufficio.sh che:
+#
+# - riceve un numero ufficio come parametro
+# - controlla se il parametro esiste
+# - se manca stampa:
+#   "Errore"
+# - se presente mostra i dipendenti
+#   che lavorano in quell’ufficio
+#
+# Usa:
+# $1
+# $#
+# if
+# grep oppure awk
+
+# =========================================================
+# PARTE 9 - SCRIPT AVANZATO
+# =========================================================
+
+# 38) Scrivi uno script cerca_reparto.sh che:
+#
+# - riceve un reparto come parametro
+# - mostra SOLO i nomi dei dipendenti
+#   di quel reparto
+#
+# Esempio:
+#
+# ./cerca_reparto.sh VENDITE
+#
+# output:
+# Anna_Bianchi
+# Carlo_Canova
+# Dora_Dorati
+# Giorgio_De_Giorgi
+
+# =========================================================
+# PARTE 10 - SUPER BONUS 💀💀💀
+# =========================================================
+
+# 39) Scrivi UN SOLO comando che:
+#
+# - prende tutti i reparti
+# - elimina duplicati
+# - ordina alfabeticamente
+# - salva tutto in finale.txt
+# - aggiunge la data
+# - aggiunge il numero totale dipendenti
+# - mostra il contenuto finale a schermo
+#
+# SENZA usare nano
+#
+# =========================================================

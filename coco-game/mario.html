@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Mario - Egg Collector Edition</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="stile-score.css"> 
+    <style>
+        * {
+            box-sizing: border-box;
+            image-rendering: pixelated;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: monospace;
+        }
+        #gameContainer {
+            position: relative;
+            display: block;
+        }
+        canvas {
+            background: #5c94fc; 
+            display: block;
+        }
+
+        /* Schermata Trasparente Scura di Game Over (Stile Flappy) */
+        .game-over-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85); 
+            display: none; 
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            backdrop-filter: blur(2px); 
+        }
+
+        /* Riquadro centrale */
+        .game-over-box {
+            background-color: #2c3e50;
+            border: 6px solid #e52521;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 0 #000;
+            max-width: 500px;
+            width: 85%;
+        }
+
+        .game-over-box h2 {
+            color: #e52521;
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            margin: 0 0 25px 0;
+            text-shadow: 3px 3px #000;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        /* Contenitore dei 3 pulsanti */
+        .game-over-menu {
+            display: flex;
+            justify-content: space-around;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        /* Stile singoli pulsanti */
+        .go-btn {
+            background-color: #34495e;
+            border: 4px solid #000;
+            color: #fff;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            width: 30%;
+            transition: transform 0.1s;
+            text-decoration: none;
+            font-family: inherit;
+        }
+
+        .go-btn:active {
+            transform: scale(0.95);
+            background-color: #1a252f;
+        }
+
+        .go-btn img {
+            width: 50px;
+            height: 50px;
+            image-rendering: pixelated; 
+            margin-bottom: 8px;
+            object-fit: contain;
+        }
+
+        .go-btn span {
+            font-size: clamp(0.7rem, 1.5vw, 1rem);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="game-over-screen" class="game-over-overlay">
+            <div class="game-over-box">
+                <h2>GAME OVER</h2>
+                <div class="game-over-menu">
+                    <a href="index.html" class="go-btn">
+                        <img src="img/pio.3.png" alt="Home Icon">
+                        <span>HOME</span>
+                    </a>
+                    <a href="rank.html" class="go-btn">
+                        <img src="img/pio.2.png" alt="Rank Icon">
+                        <span>RANK</span>
+                    </a>
+                    <div class="go-btn" onclick="resetGame()">
+                        <img src="img/pio.1.png" alt="Replay Icon">
+                        <span>REPLAY</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const gameContainer = document.getElementById('gameContainer');
+const gameOverScreen = document.getElementById("game-over-screen");
+
+// Inizializzazione degli effetti sonori
+const suonoSalto = new Audio('audio/jump.mp4');
+const suonoMoneta = new Audio('audio/coin.mp3');
+const suonoSconfiggiNemico = new Audio('audio/hit.mp3');
+
+// Caricamento immagini del mondo
+const imgPratoInizio = new Image();
+imgPratoInizio.src = 'img/prato_inizio.png';
+
+const imgPratoCentrale = new Image();
+imgPratoCentrale.src = 'img/prato.png';
+
+const imgPratoFine = new Image();
+imgPratoFine.src = 'img/prato_fine.png';
+
+const imgDomanda = new Image();
+imgDomanda.src = 'img/domanda.png';
+
+const imgBoss = new Image();
+imgBoss.src = 'img/boss.png';
+
+const imgUovo1 = new Image();
+imgUovo1.src = 'img/strapazzato11.png';
+
+const imgUovo2 = new Image();
+imgUovo2.src = 'img/strapazzato12.png';
+
+const imgTubo = new Image();
+imgTubo.src = 'img/tubo.png';
+
+const imgMattone = new Image();
+imgMattone.src = 'img/mattone.png';
+
+// IMMAGINI PROTAGONISTA: Stato normale e Stato Fungo (Super)
+const imgGallo = new Image();
+imgGallo.src = 'img/gallo.png';
+
+const imgPolloLungo = new Image();
+imgPolloLungo.src = 'img/pollolungo.png';
+
+const LARGHEZZA_VISTA = 1200; 
+const ALTEZZA_GIOCO = 600;
+
+let cameraX = 0;
+let uovaRaccolte = 0; 
+let punteggioTotale = 0; 
+let flashTimer = 0; 
+let giocoBloccato = false;
+let salvato = false;
+
+let estremoDestroGenerato = 1400; 
+let estremoSinistroGenerato = -600;
+
+const gravita = 0.6;
+
+const DIMENSIONE_BLOCCO_TERRENO = 100; 
+const QUOTA_TERRENO = ALTEZZA_GIOCO - DIMENSIONE_BLOCCO_TERRENO; 
+
+const START_X = 100;
+const START_Y = QUOTA_TERRENO - 52; 
+
+const NEMICO_LARGHEZZA = 44; 
+const NEMICO_ALTEZZA = 44;   
+
+const DIMENSIONE_UOVO = 60; 
+const ALTEZZA_TUBO_STANDARD = 80;
+
+const mario = {
+    x: START_X, y: START_Y, larghezza: 40, altezza: 52,
+    velocitaX: 0, velocitaY: 0, velocitaMovimento: 6, forzaSalto: 15.5,
+    inAria: false, direzione: 'destra',
+    isSuper: false, invulnerabile: 0
+};
+
+let platforms = [];
+let uova = []; 
+let nemici = [];
+let funghi = [];
+let tubi = []; 
+let testiPunteggio = []; 
+
+function ridimensiona() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    gameContainer.style.width = canvas.width + 'px';
+    gameContainer.style.height = canvas.height + 'px';
+}
+window.addEventListener('resize', ridimensiona);
+ridimensiona();
+
+function generaMappa(startX, versoDestra) {
+    let larghezzaPezzo = 400; 
+    let tipoStruttura = Math.floor(Math.random() * 5);
+
+    if (tipoStruttura !== 3) {
+        platforms.push({ x: startX, y: QUOTA_TERRENO, larghezza: larghezzaPezzo, altezza: DIMENSIONE_BLOCCO_TERRENO, colore: '#cb4a0d', tipo: 'normal' });
+    } else {
+        platforms.push({ x: startX, y: QUOTA_TERRENO, larghezza: 200, altezza: DIMENSIONE_BLOCCO_TERRENO, colore: '#cb4a0d', tipo: 'normal' });
+        platforms.push({ x: startX + 240, y: QUOTA_TERRENO - 110, larghezza: 120, altezza: 30, colore: '#9c4a00', tipo: 'mattone' });
+        platforms.push({ x: startX + 400, y: QUOTA_TERRENO, larghezza: 200, altezza: DIMENSIONE_BLOCCO_TERRENO, colore: '#cb4a0d', tipo: 'normal' });
+        larghezzaPezzo = 600; 
+    }
+
+    let generaBloccoMisterioso = Math.random() < 0.15;
+
+    switch (tipoStruttura) {
+        case 0: 
+            platforms.push({ x: startX + 120, y: QUOTA_TERRENO - 180, larghezza: 120, altezza: 40, colore: '#9c4a00', tipo: 'mattone' });
+            if (generaBloccoMisterioso) {
+                platforms.push({ x: startX + 240, y: QUOTA_TERRENO - 180, larghezza: 40, altezza: 40, colore: '#fc9838', tipo: '?', svuotato: false });
+            } else {
+                platforms.push({ x: startX + 240, y: QUOTA_TERRENO - 180, larghezza: 40, altezza: 40, colore: '#9c4a00', tipo: 'mattone' });
+            }
+            platforms.push({ x: startX + 280, y: QUOTA_TERRENO - 180, larghezza: 80, altezza: 40, colore: '#9c4a00', tipo: 'mattone' });
+            
+            tubi.push({ x: startX + 440, y: QUOTA_TERRENO - ALTEZZA_TUBO_STANDARD, larghezza: 60, altezza: ALTEZZA_TUBO_STANDARD });
+            nemici.push({ x: startX + 160, y: QUOTA_TERRENO - NEMICO_ALTEZZA, velX: -1.6, larghezza: NEMICO_LARGHEZZA, altezza: NEMICO_ALTEZZA, vivo: true });
+            nemici.push({ x: startX + 300, y: QUOTA_TERRENO - NEMICO_ALTEZZA, velX: -1.2, larghezza: NEMICO_LARGHEZZA, altezza: NEMICO_ALTEZZA, vivo: true });
+            break;
+
+        case 1: 
+            if (generaBloccoMisterioso) {
+                platforms.push({ x: startX + 160, y: QUOTA_TERRENO - 140, larghezza: 40, altezza: 40, colore: '#fc9838', tipo: '?', svuotato: false });
+            } else {
+                platforms.push({ x: startX + 160, y: QUOTA_TERRENO - 140, larghezza: 40, altezza: 40, colore: '#9c4a00', tipo: 'mattone' });
+            }
+            platforms.push({ x: startX + 200, y: QUOTA_TERRENO - 140, larghezza: 160, altezza: 40, colore: '#9c4a00', tipo: 'mattone' });
+            
+            uova.push({ x: startX + 220, y: QUOTA_TERRENO - 200, presa: false }, { x: startX + 260, y: QUOTA_TERRENO - 200, presa: false });
+            nemici.push({ x: startX + 220, y: QUOTA_TERRENO - 140 - NEMICO_ALTEZZA, velX: -1.5, larghezza: NEMICO_LARGHEZZA, altezza: NEMICO_ALTEZZA, vivo: true });
+            nemici.push({ x: startX + 450, y: QUOTA_TERRENO - NEMICO_ALTEZZA, velX: -1.8, larghezza: NEMICO_LARGHEZZA, altezza: NEMICO_ALTEZZA, vivo: true });
+            break;
+
+        case 2: 
+            platforms.push({ x: startX + 80, y: QUOTA_TERRENO - 40, larghezza: 40, altezza: 40, colore: '#9c4a00', tipo: 'mattone' });
+            platforms.push({ x: startX + 120, y: QUOTA_TERRENO - 40, larghezza: 40, altezza: 40, colore: '#9c4a00', tipo: 'mattone' });
+            platforms.push({ x: startX + 120, y: QUOTA_TERRENO - 80, larghezza: 40, altezza: 40, colore: '#9c4a00', tipo: 'mattone' });
+            
+            if (generaBloccoMisterioso) {
+                platforms.push({ x: startX + 240, y: QUOTA_TERRENO - 220, larghezza: 40, altezza: 40, colore: '#fc9838', tipo: '?', svuotato: false });
+            }
+            
+            tubi.push({ x: startX + 360, y: QUOTA_TERRENO - ALTEZZA_TUBO_STANDARD, larghezza: 60, altezza: ALTEZZA_TUBO_STANDARD });
+            nemici.push({ x: startX + 180, y: QUOTA_TERRENO - NEMICO_ALTEZZA, velX: -1.5, larghezza: NEMICO_LARGHEZZA, altezza: NEMICO_ALTEZZA, vivo: true });
+            break;
+
+        case 3: 
+            if (generaBloccoMisterioso) {
+                platforms.push({ x: startX + 190, y: QUOTA_TERRENO - 220, larghezza: 40, altezza: 40, colore: '#fc9838', tipo: '?', svuotato: false });
+            }
+            uova.push({ x: startX + 190, y: QUOTA_TERRENO - 150, presa: false }, { x: startX + 220, y: QUOTA_TERRENO - 150, presa: false });
+            nemici.push({ x: startX + 40, y: QUOTA_TERRENO - NEMICO_ALTEZZA, velX: -1.2, larghezza: NEMICO_LARGHEZZA, altezza: NEMICO_ALTEZZA, vivo: true });
+            break;
+
+        case 4: 
+            tubi.push({ x: startX + 100, y: QUOTA_TERRENO - ALTEZZA_TUBO_STANDARD, larghezza: 60, altezza: ALTEZZA_TUBO_STANDARD });
+            platforms.push({ x: startX + 220, y: QUOTA_TERRENO - 190, larghezza: 120, altezza: 40, colore: '#9c4a00', tipo: 'mattone' });
+            
+            if (generaBloccoMisterioso) {
+                platforms.push({ x: startX + 340, y: QUOTA_TERRENO - 190, larghezza: 40, altezza: 40, colore: '#fc9838', tipo: '?', svuotato: false });
+            } else {
+                platforms.push({ x: startX + 340, y: QUOTA_TERRENO - 190, larghezza: 40, altezza: 40, colore: '#9c4a00', tipo: 'mattone' });
+            }
+            
+            nemici.push({ x: startX + 240, y: QUOTA_TERRENO - NEMICO_ALTEZZA, velX: -2.0, larghezza: NEMICO_LARGHEZZA, altezza: NEMICO_ALTEZZA, vivo: true });
+            nemici.push({ x: startX + 480, y: QUOTA_TERRENO - NEMICO_ALTEZZA, velX: -1.4, larghezza: NEMICO_LARGHEZZA, altezza: NEMICO_ALTEZZA, vivo: true });
+            break;
+    }
+
+    if (versoDestra) estremoDestroGenerato += larghezzaPezzo;
+    else estremoSinistroGenerato -= larghezzaPezzo;
+}
+
+function inizializzaMappaIniziale() {
+    platforms = [
+        { x: -800, y: QUOTA_TERRENO, larghezza: 2400, altezza: DIMENSIONE_BLOCCO_TERRENO, colore: '#cb4a0d', tipo: 'normal' },
+        { x: 450, y: QUOTA_TERRENO - 180, larghezza: 160, altezza: 40, colore: '#9c4a00', tipo: 'mattone' },
+        { x: 530, y: QUOTA_TERRENO - 180, larghezza: 40, altezza: 40, colore: '#fc9838', tipo: '?', svuotato: false } 
+    ];
+    tubi = [{ x: 800, y: QUOTA_TERRENO - ALTEZZA_TUBO_STANDARD, larghezza: 60, altezza: ALTEZZA_TUBO_STANDARD }];
+    uova = [{ x: 460, y: QUOTA_TERRENO - 240, presa: false }];
+    nemici = [{ x: 950, y: QUOTA_TERRENO - NEMICO_ALTEZZA, velX: -1.5, larghezza: NEMICO_LARGHEZZA, altezza: NEMICO_ALTEZZA, vivo: true }];
+    funghi = [];
+    testiPunteggio = [];
+    
+    estremoDestroGenerato = 1600;
+    estremoSinistroGenerato = -800;
+
+    for(let i = 0; i < 4; i++) generaMappa(estremoDestroGenerato, true);
+    for(let i = 0; i < 2; i++) generaMappa(estremoSinistroGenerato - 640, false);
+}
+
+function eseguiGameOverAResetTotale() {
+    giocoBloccato = true;
+    gameOverScreen.style.display = 'flex'; 
+}
+
+function salvaPunteggio() {
+    const nomeGiocatore = localStorage.getItem("playerName") || "GUEST";
+    const nuovoPunteggio = { 
+        nome: nomeGiocatore.toUpperCase(), 
+        punti: parseInt(punteggioTotale) 
+    };
+    let classifica = JSON.parse(localStorage.getItem("classifica_gioco_mario")) || [];
+    classifica.push(nuovoPunteggio);
+    classifica.sort((a, b) => b.punti - a.punti);
+    classifica = classifica.slice(0, 50);
+    localStorage.setItem("classifica_gioco_mario", JSON.stringify(classifica));
+}
+
+function resetGame() {
+    gameOverScreen.style.display = "none";
+    punteggioTotale = 0;
+    uovaRaccolte = 0;
+
+    mario.x = START_X;
+    mario.y = QUOTA_TERRENO - 52;
+    mario.velocitaX = 0;
+    mario.velocitaY = 0;
+    mario.isSuper = false;
+    mario.altezza = 52; 
+    mario.direzione = 'destra';
+    
+    inizializzaMappaIniziale();
+
+    mario.invulnerabile = 90; 
+    cameraX = mario.x - LARGHEZZA_VISTA / 2; 
+
+    salvato = false;
+    giocoBloccato = false;
+}
+
+const tasti = {};
+window.addEventListener('keydown', e => {
+    if (giocoBloccato) return;
+    tasti[e.code] = true;
+    if (e.code === 'Space' || e.code === 'ArrowUp') e.preventDefault(); 
+});
+window.addEventListener('keyup', e => tasti[e.code] = false);
+
+function controllaCollisione(rett1, rett2) {
+    return rett1.x < rett2.x + rett2.larghezza &&
+           rett1.x + rett1.larghezza > rett2.x &&
+           rett1.y < rett2.y + rett2.altezza &&
+           rett1.y + rett1.altezza > rett2.y;
+}
+
+function update() {
+    flashTimer++; 
+
+    if (giocoBloccato) return;
+
+    if (mario.invulnerabile > 0) mario.invulnerabile--;
+
+    if (mario.x > estremoDestroGenerato - 1800) generaMappa(estremoDestroGenerato, true);
+    if (mario.x < estremoSinistroGenerato + 1800) generaMappa(estremoSinistroGenerato - 640, false);
+
+    if (tasti['ArrowRight'] || tasti['KeyD']) { 
+        mario.velocitaX = mario.velocitaMovimento; 
+        mario.direzione = 'destra'; 
+    } 
+    else if (tasti['ArrowLeft'] || tasti['KeyA']) { 
+        mario.velocitaX = -mario.velocitaMovimento; 
+        mario.direzione = 'sinistra'; 
+    } 
+    else { 
+        mario.velocitaX = 0; 
+    }
+
+    if ((tasti['Space'] || tasti['ArrowUp'] || tasti['KeyW']) && !mario.inAria) { 
+        mario.velocitaY = -mario.forzaSalto; 
+        mario.inAria = true; 
+        
+        suonoSalto.currentTime = 0;
+        suonoSalto.play().catch(error => console.log("Audio bloccato: ", error));
+    }
+    mario.velocitaY += gravita;
+
+    mario.x += mario.velocitaX;
+    
+    for (let plat of platforms) {
+        if (controllaCollisione(mario, plat)) {
+            if (mario.velocitaX > 0) mario.x = plat.x - mario.larghezza;
+            else if (mario.velocitaX < 0) mario.x = plat.x + plat.larghezza;
+            mario.velocitaX = 0; 
+        }
+    }
+    for (let tubo of tubi) {
+        if (controllaCollisione(mario, tubo)) {
+            if (mario.velocitaX > 0) mario.x = tubo.x - mario.larghezza;
+            else if (mario.velocitaX < 0) mario.x = tubo.x + tubo.larghezza;
+            mario.velocitaX = 0;
+        }
+    }
+
+    mario.y += mario.velocitaY;
+    mario.inAria = true;
+
+    for (let plat of platforms) {
+        if (controllaCollisione(mario, plat)) {
+            if (mario.velocitaY > 0) { 
+                mario.y = plat.y - mario.altezza; 
+                mario.velocitaY = 0; 
+                mario.inAria = false; 
+            }
+            else if (mario.velocitaY < 0) { 
+                mario.y = plat.y + plat.altezza; 
+                mario.velocitaY = 0; 
+                
+                if (plat.tipo === '?' && !plat.svuotato) {
+                    plat.svuotato = true;
+                    suonoMoneta.currentTime = 0;
+                    suonoMoneta.play().catch(e => console.log(e));
+
+                    funghi.push({
+                        x: plat.x + 2, y: plat.y - 38, larghezza: 36, altezza: 36, velX: 2.3, velY: -3, inAria: true, attivo: true
+                    });
+                }
+            }
+        }
+    }
+
+    for (let tubo of tubi) {
+        if (controllaCollisione(mario, tubo)) {
+            if (mario.velocitaY > 0) {
+                mario.y = tubo.y - mario.altezza;
+                mario.velocitaY = 0;
+                mario.inAria = false;
+            } else if (mario.velocitaY < 0) {
+                mario.y = tubo.y + tubo.altezza;
+                mario.velocitaY = 0;
+            }
+        }
+    }
+
+    funghi.forEach(fungo => {
+        if (!fungo.attivo) return;
+
+        fungo.velY += gravita;
+        fungo.x += fungo.velX;
+
+        let colpoMuro = false;
+        for (let plat of platforms) {
+            if (controllaCollisione(fungo, plat)) { colpoMuro = true; break; }
+        }
+        for (let tubo of tubi) {
+            if (controllaCollisione(fungo, tubo)) { colpoMuro = true; break; }
+        }
+        if (colpoMuro) { fungo.x -= fungo.velX; fungo.velX = -fungo.velX; }
+
+        fungo.y += fungo.velY;
+        fungo.inAria = true;
+
+        for (let plat of platforms) {
+            if (controllaCollisione(fungo, plat)) {
+                if (fungo.velY > 0 && fungo.y + fungo.altezza - fungo.velY <= plat.y + 6) { 
+                    fungo.y = plat.y - fungo.altezza; 
+                    fungo.velY = 0; 
+                    fungo.inAria = false; 
+                }
+            }
+        }
+        for (let tubo of tubi) {
+            if (controllaCollisione(fungo, tubo)) {
+                if (fungo.velY > 0) { fungo.y = tubo.y - fungo.altezza; fungo.velY = 0; fungo.inAria = false; }
+            }
+        }
+
+        if (fungo.y > ALTEZZA_GIOCO + 200) fungo.attivo = false;
+
+        if (controllaCollisione(mario, fungo)) {
+            fungo.attivo = false;
+            if (!mario.isSuper) { mario.isSuper = true; mario.altezza = 72; mario.y -= 20; }
+        }
+    });
+
+    nemici.forEach((nemico, indice) => {
+        if (!nemico.vivo) return;
+        nemico.x += nemico.velX;
+
+        for (let altroNemico of nemici) {
+            if (altroNemico !== nemico && altroNemico.vivo) {
+                if (controllaCollisione(nemico, altroNemico)) {
+                    nemico.x -= nemico.velX; 
+                    nemico.velX = -nemico.velX;
+                    break;
+                }
+            }
+        }
+
+        let invertiMarcia = false;
+        for (let plat of platforms) {
+            if (controllaCollisione(nemico, plat)) { invertiMarcia = true; break; }
+        }
+        for (let tubo of tubi) {
+            if (controllaCollisione(nemico, tubo)) { invertiMarcia = true; break; }
+        }
+        if (invertiMarcia) { nemico.x -= nemico.velX; nemico.velX = -nemico.velX; }
+
+        let puntoControlloX = nemico.velX > 0 ? nemico.x + nemico.larghezza : nemico.x;
+        let cEPlattaformaSotto = false;
+        for (let plat of platforms) {
+            if (puntoControlloX >= plat.x && puntoControlloX <= plat.x + plat.larghezza &&
+                nemico.y + nemico.altezza <= plat.y + 8 && nemico.y + nemico.altezza >= plat.y - 8) {
+                cEPlattaformaSotto = true; break;
+            }
+        }
+        for (let tubo of tubi) {
+            if (puntoControlloX >= tubo.x && puntoControlloX <= tubo.x + tubo.larghezza &&
+                nemico.y + nemico.altezza <= tubo.y + 8 && nemico.y + nemico.altezza >= tubo.y - 8) {
+                cEPlattaformaSotto = true; break;
+            }
+        }
+        if (!cEPlattaformaSotto) { nemico.x -= nemico.velX; nemico.velX = -nemico.velX; }
+
+        if (controllaCollisione(mario, nemico)) {
+            if (mario.velocitaY > 0 && (mario.y + mario.altezza - mario.velocitaY) <= nemico.y + (nemico.altezza * 0.25)) {
+                nemico.vivo = false;
+                mario.velocitaY = -10;
+                
+                suonoSconfiggiNemico.currentTime = 0;
+                suonoSconfiggiNemico.play().catch(error => console.log("Audio hit bloccato: ", error));
+
+                punteggioTotale += 200; 
+
+                testiPunteggio.push({
+                    testo: "200",
+                    x: nemico.x + (nemico.larghezza / 2),
+                    y: nemico.y - 10,
+                    durata: 45 
+                });
+
+            } else if (mario.invulnerabile === 0) {
+                if (mario.isSuper) {
+                    mario.isSuper = false;
+                    mario.altezza = 52; 
+                    mario.invulnerabile = 90; 
+                } else {
+                    eseguiGameOverAResetTotale();
+                }
+            }
+        }
+    });
+
+    uova.forEach(uovo => {
+        if (!uovo.presa) {
+            let metaDim = DIMENSIONE_UOVO / 2;
+            let rectUovo = { x: uovo.x - metaDim, y: uovo.y - metaDim, larghezza: DIMENSIONE_UOVO, altezza: DIMENSIONE_UOVO };
+            if (controllaCollisione(mario, rectUovo)) {
+                uovo.presa = true; 
+                uovaRaccolte++; 
+                punteggioTotale += 100; 
+                
+                suonoMoneta.currentTime = 0;
+                suonoMoneta.play().catch(error => console.log("Audio moneta bloccato: ", error));
+            }
+        }
+    });
+
+    for (let i = testiPunteggio.length - 1; i >= 0; i--) {
+        let t = testiPunteggio[i];
+        t.y -= 1; 
+        t.durata--;
+        if(t.durata <= 0) {
+            testiPunteggio.splice(i, 1);
+        }
+    }
+
+    if (mario.y > ALTEZZA_GIOCO + 80) eseguiGameOverAResetTotale();
+
+    cameraX = mario.x - LARGHEZZA_VISTA / 2;
+}
+
+function drawScore() {
+    const compStyles = window.getComputedStyle(document.documentElement);
+    const fontName = compStyles.getPropertyValue('--score-font').trim() || 'monospace';
+    const scoreColor = compStyles.getPropertyValue('--score-color').trim() || '#ffffff';
+    const shadowColor = compStyles.getPropertyValue('--score-shadow').trim() || '#000000';
+    
+    let fontSize = Math.max(24, Math.min(window.innerWidth * 0.04, 32));
+    
+    ctx.save();
+    ctx.font = `900 ${fontSize}px ${fontName}`;
+    ctx.textBaseline = "top";
+    ctx.textAlign = "left"; 
+    
+    ctx.fillStyle = shadowColor;
+    ctx.fillText("SCORE: " + punteggioTotale, 40 + 3, 20 + 3);
+    
+    ctx.fillStyle = scoreColor;
+    ctx.fillText("SCORE: " + punteggioTotale, 40, 20);
+    ctx.restore();
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    const scale = Math.min(canvas.width / LARGHEZZA_VISTA, canvas.height / ALTEZZA_GIOCO);
+    ctx.translate((canvas.width - LARGHEZZA_VISTA * scale) / 2, (canvas.height - ALTEZZA_GIOCO * scale) / 2);
+    ctx.scale(scale, scale);
+
+    ctx.imageSmoothingEnabled = false;
+
+    ctx.fillStyle = '#5c94fc';
+    ctx.fillRect(0, 0, LARGHEZZA_VISTA, ALTEZZA_GIOCO);
+
+    ctx.save();
+    ctx.translate(-cameraX, 0);
+
+    platforms.forEach(plat => {
+        if (plat.tipo === '?') {
+            if (!plat.svuotato) {
+                ctx.drawImage(imgDomanda, plat.x, plat.y, plat.larghezza, plat.altezza);
+            } else {
+                ctx.fillStyle = '#442800';
+                ctx.fillRect(plat.x, plat.y, plat.larghezza, plat.altezza);
+                ctx.strokeStyle = '#000'; 
+                ctx.lineWidth = 4; 
+                ctx.strokeRect(plat.x, plat.y, plat.larghezza, plat.altezza);
+                ctx.fillStyle = '#000'; 
+                ctx.fillRect(plat.x + 16, plat.y + 16, 8, 8); 
+            }
+        } else if (plat.tipo === 'mattone') {
+            let dimMattone = 40;
+            for (let bx = plat.x; bx < plat.x + plat.larghezza; bx += dimMattone) {
+                let larghezzaMattone = Math.min(dimMattone, (plat.x + plat.larghezza) - bx);
+                ctx.drawImage(imgMattone, bx, plat.y, larghezzaMattone, plat.altezza);
+            }
+        } else {
+            let haTesseraASinistra = platforms.some(p => p !== plat && p.tipo === 'normal' && p.y === plat.y && (p.x + p.larghezza) === plat.x);
+            let haTesseraADestra = platforms.some(p => p !== plat && p.tipo === 'normal' && p.y === plat.y && p.x === (plat.x + plat.larghezza));
+
+            ctx.fillStyle = '#cb4a0d';
+            ctx.fillRect(plat.x, plat.y, plat.larghezza, ALTEZZA_GIOCO - plat.y);
+
+            if (!haTesseraASinistra) {
+                ctx.drawImage(imgPratoInizio, plat.x, plat.y, DIMENSIONE_BLOCCO_TERRENO + 1, DIMENSIONE_BLOCCO_TERRENO);
+            }
+            
+            let startX = haTesseraASinistra ? plat.x : plat.x + DIMENSIONE_BLOCCO_TERRENO;
+            let endX = haTesseraADestra ? plat.x + plat.larghezza : plat.x + plat.larghezza - DIMENSIONE_BLOCCO_TERRENO;
+
+            for (let bx = startX; bx < endX; bx += DIMENSIONE_BLOCCO_TERRENO) {
+                let larghezzaTassello = Math.min(DIMENSIONE_BLOCCO_TERRENO, endX - bx);
+                ctx.drawImage(imgPratoCentrale, bx, plat.y, larghezzaTassello + 1, DIMENSIONE_BLOCCO_TERRENO);
+            }
+            
+            if (!haTesseraADestra) {
+                ctx.drawImage(imgPratoFine, endX, plat.y, DIMENSIONE_BLOCCO_TERRENO + 1, DIMENSIONE_BLOCCO_TERRENO);
+            }
+        }
+    });
+
+    tubi.forEach(t => {
+        ctx.drawImage(imgTubo, t.x, t.y, t.larghezza, t.altezza);
+    });
+
+    uova.forEach(u => {
+        if (!u.presa) {
+            let imgUovoCorrente = Math.floor(flashTimer / 12) % 2 === 0 ? imgUovo1 : imgUovo2;
+            let metaDim = DIMENSIONE_UOVO / 2;
+            ctx.drawImage(imgUovoCorrente, u.x - metaDim, u.y - metaDim, DIMENSIONE_UOVO, DIMENSIONE_UOVO);
+        }
+    });
+
+    funghi.forEach(f => {
+        if (f.attivo) {
+            ctx.fillStyle = '#e52521'; ctx.fillRect(f.x, f.y, f.larghezza, 16); 
+            ctx.fillStyle = '#fff'; ctx.fillRect(f.x + 4, f.y + 4, 8, 8); ctx.fillRect(f.x + 24, f.y + 4, 8, 8);
+            ctx.fillStyle = '#fcc088'; ctx.fillRect(f.x + 8, f.y + 16, f.larghezza - 16, 20); 
+            ctx.fillStyle = '#000'; ctx.fillRect(f.x + 12, f.y + 22, 2, 6); ctx.fillRect(f.x + 22, f.y + 22, 2, 6); 
+            ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.strokeRect(f.x, f.y, f.larghezza, f.altezza);
+        }
+    });
+
+    nemici.forEach(n => {
+        if (n.vivo) {
+            ctx.save();
+            ctx.translate(n.x, n.y);
+            
+            if (n.velX > 0) {
+                ctx.translate(n.larghezza, 0);
+                ctx.scale(-1, 1);
+            }
+
+            let oscillazionePasso = Math.floor(flashTimer / 8) % 2 === 0 ? 2 : 0;
+            ctx.drawImage(imgBoss, 0, oscillazionePasso, n.larghezza, n.altezza - oscillazionePasso);
+            
+            ctx.restore();
+        }
+    });
+
+    testiPunteggio.forEach(t => {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 16px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(t.testo, t.x, t.y);
+    });
+
+    // --- RENDERING DINAMICO (GALLO / POLLOLUNGO) ---
+    if (mario.invulnerabile === 0 || Math.floor(mario.invulnerabile / 4) % 2 === 0) {
+        ctx.save();
+        
+        // Specchia l'immagine orizzontalmente se cammina a sinistra
+        if (mario.direzione === 'sinistra' || mario.direzione === 'sinistar') {
+            ctx.translate(mario.x + mario.larghezza, mario.y);
+            ctx.scale(-1, 1);
+        } else {
+            ctx.translate(mario.x, mario.y);
+        }
+        
+        // Seleziona l'immagine corretta in base allo stato 'isSuper'
+        const imgProtagonistaCorrente = mario.isSuper ? imgPolloLungo : imgGallo;
+        
+        // Disegna il personaggio sul rettangolo aggiornato
+        ctx.drawImage(imgProtagonistaCorrente, 0, 0, mario.larghezza, mario.altezza);
+        
+        ctx.restore();
+    }
+
+    ctx.restore(); 
+
+    drawScore();
+
+    ctx.restore(); 
+}
+
+function gameLoop() {
+    update();
+    draw();
+
+    if (giocoBloccato) {
+        if (!salvato) {
+            salvato = true;
+            salvaPunteggio(); 
+        }
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+inizializzaMappaIniziale();
+gameLoop();
+</script>
+</body>
+</html>

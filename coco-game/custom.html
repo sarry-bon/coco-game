@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CUSTOM GAME MENU</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary-color: #042f50;
+            --accent-color: #f1c40f;
+        }
+
+        body.page-custom {
+            margin: 0; 
+            padding: 0; 
+            width: 100%; 
+            height: 100vh; 
+            display: flex;
+            overflow: hidden;
+            background-size: cover; 
+            background-position: center;
+            background-repeat: no-repeat; 
+            background-attachment: fixed;
+            position: relative; 
+            color: white; 
+            transition: background 0.5s;
+            background-color: #000;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            
+            /* CORREZIONE SFOCATURA SFONDO: Mantiene i pixel nitidi per i giochi della lista (flappy, memory, ecc.) */
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        /* Sfondo oscurato per far risaltare l'interfaccia */
+        body.page-custom::before {
+            content: ""; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: linear-gradient(90deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.2) 100%);
+            z-index: 1; 
+            pointer-events: none;
+        }
+
+        .content-wrapper { 
+            position: relative; 
+            z-index: 2; 
+            display: flex; 
+            width: 100%; 
+            height: 100%; 
+        }
+
+        /* Pannello Sinistro: Contenuti principali */
+        .left-panel {
+            width: 55%; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center;
+            gap: 50px; 
+            padding: 0 clamp(40px, 6vw, 120px);
+            box-sizing: border-box;
+        }
+
+        /* INFO DEL GIOCO (BLOCCO ALTO) */
+        .header-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #titolo-gioco {
+            font-size: clamp(36px, 5vw, 65px); 
+            color: #fff;
+            font-weight: 900;
+            text-transform: uppercase; 
+            margin: 0; 
+            line-height: 1.1;
+            letter-spacing: -1px;
+            text-shadow: 2px 4px 10px rgba(0,0,0,0.7);
+        }
+
+        /* Modificato bordo in rettangolare netto per stile arcade */
+        #descrizione-gioco {
+            font-size: clamp(14px, 1.3vw, 19px); 
+            margin: 0;
+            line-height: 1.6; 
+            max-width: 650px; 
+            color: #e0e0e0;
+            background: rgba(0,0,0,0.4); 
+            padding: 20px 25px; 
+            border-radius: 0; 
+            border-left: 6px solid var(--accent-color); 
+            backdrop-filter: blur(5px);
+        }
+
+        /* SEZIONE PROFILO: TRASFORMATA IN STILE ARCADE RETTANGOLARE */
+        .login-box {
+            display: flex; 
+            flex-direction: column; 
+            gap: 25px; 
+            width: 100%;
+            max-width: 580px; 
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 35px; 
+            border-radius: 0; 
+            border: 3px solid rgba(255, 255, 255, 0.4); 
+            backdrop-filter: blur(12px);
+            box-shadow: 10px 10px 0px 0px rgba(0, 0, 0, 0.5); 
+        }
+
+        .profile-label {
+            font-size: 14px; 
+            color: rgba(255,255,255,0.9); 
+            letter-spacing: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .selector-container {
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        /* Box nome squadrato */
+        .name-tag {
+            font-size: 26px; 
+            font-weight: 900;
+            letter-spacing: 2px;
+            flex-grow: 1;
+            text-align: center; 
+            background: rgba(0, 0, 0, 0.7); 
+            padding: 16px 25px; 
+            border-radius: 0; 
+            border: 3px solid var(--accent-color); 
+            color: var(--accent-color);
+            text-shadow: 0 0 8px rgba(var(--accent-color), 0.6);
+            text-transform: uppercase;
+        }
+
+        /* Input di testo squadrato */
+        .input-field {
+            background: rgba(0,0,0,0.8); 
+            border: 2px solid rgba(255,255,255,0.4); 
+            border-radius: 0; 
+            color: #fff; 
+            padding: 18px; 
+            width: 100%; 
+            box-sizing: border-box;
+            font-size: 16px; 
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(var(--accent-color), 0.5);
+        }
+
+        /* Pulsanti freccia squadrati */
+        button.arrow-nav {
+            background: rgba(255,255,255,0.1); 
+            border: 2px solid rgba(255,255,255,0.3); 
+            color: white;
+            font-size: 24px; 
+            padding: 14px 24px;
+            border-radius: 0; 
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button.arrow-nav:hover { 
+            background: var(--accent-color); 
+            color: black;
+            border-color: var(--accent-color);
+        }
+
+        /* Pannello Destro */
+        .right-panel { 
+            width: 45%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+
+        /* CORREZIONE IMMAGINI: Mantenuto il pixelated e aggiunti i prefissi di compatibilità browser */
+        .play-arrow, .back-btn {
+            cursor: pointer;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            transition: transform 0.2s, filter 0.2s;
+        }
+
+        .play-arrow {
+            width: clamp(80px, 12vw, 150px); 
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+        }
+        
+        .play-arrow:hover { 
+            transform: scale(1.1); 
+            filter: drop-shadow(0 12px 20px rgba(0,0,0,0.7)) brightness(1.1);
+        }
+
+        /* Pulsante indietro fluttuante */
+        .back-btn {
+            position: absolute;
+            bottom: 30px;
+            left: 40px;
+            width: 45px;
+            height: 45px;
+            z-index: 10;
+            opacity: 0.7;
+        }
+        .back-btn:hover {
+            transform: translateX(-5px);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="page-custom">
+
+<div class="content-wrapper">
+    <div class="left-panel">
+        
+        <div class="header-section">
+            <h1 id="titolo-gioco">CARICAMENTO...</h1>
+            <p id="descrizione-gioco">Preparati alla sfida.</p>
+        </div>
+
+        <div class="login-box">
+            <div class="profile-label">Configurazione Profilo</div>
+            <div class="selector-container">
+                <button class="arrow-nav" onclick="nextName(-1)">◀</button>
+                <div id="current-name" class="name-tag">KNIGHT</div>
+                <button class="arrow-nav" onclick="nextName(1)">▶</button>
+            </div>
+            <div>
+                <input type="text" id="new-name" class="input-field" placeholder="O SCRIVI UN NUOVO NOME...">
+            </div>
+        </div>
+
+    </div>
+    
+    <div class="right-panel">
+        <img src="img/playbutton.png" class="play-arrow" onclick="startGame()" alt="Play">
+    </div>
+</div>
+
+<a href="play.html"><img src="img/frecciasu.png" class="back-btn" alt="Back"></a>
+
+<script>
+    const giochiData = {
+        "1": { 
+            titolo: "Coco Dè", 
+            desc: "Salta, schiva i boss e raccogli tutte le uova in questa avventura platform vecchio stile!", 
+            color: "#0f4c1a",  
+            accent: "#39ff14", 
+            link: "mario.html", 
+            bg: "img/sfondo1.png" 
+        },
+        "2": { 
+            titolo: "Nyan Coco", 
+            desc: "Sfreccia nello spazio! Fai il pieno di angurie e schiva al volo le insidiose bucce di banana.", 
+            color: "#0a192f",  
+            accent: "#0052cc", 
+            link: "nyan.html", 
+            bg: "img/nyan.back.png" 
+        },
+"3": { 
+            titolo: "Doom Coco", 
+            desc: "Sopravvivi nei meandri delle Backrooms respingendo l'entità KFC in un frenetico sparatutto 3D in prima persona in stile retrò.", 
+            color: "#D4A313",  // Giallo ocra scuro / senape retrò
+            accent: "#D4A313",
+            link: "doom.html", 
+            bg: "img/sfondo3.png"
+        },
+        "4": { 
+            titolo: "Flappy Coco", 
+            desc: "Spiega le ali! Aiuta la gallina a volare tra i tubi senza toccare nessun ostacolo.", 
+            color: "#1a3a4a",  
+            accent: "#87ceeb", 
+            link: "flappy.html", 
+            bg: "img/flappy.back.png" 
+        },
+        "5": { 
+            titolo: "Memory Coco", 
+            desc: "Sfida la tua mente. Osserva attentamente la sequenza di colori e riproducila senza sbagliare.", 
+            color: "#3a3007",  
+            accent: "#d4af37", 
+            link: "memory.html", 
+            bg: "img/memoryback.png" 
+        },
+        "6": { 
+            titolo: "Snake Coco", 
+            desc: "Il grande classico rivisitato: guida i pulcini affamati a caccia di deliziosi mirtilli!", 
+            color: "#2b103c",  
+            accent: "#9933ff", 
+            link: "snake.html", 
+            bg: "img/snake.back.png" 
+        },
+        "7": { 
+            titolo: "Coco Mystery", 
+            desc: "Hai voglia di una sorpresa? Lasciati sorprendere da un gioco completamente casuale!", 
+            color: "#4a1232",  
+            accent: "#ff77ff", 
+            link: "game7.html", 
+            bg: "img/sfondo7.png" 
+        }
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const giocoId = urlParams.get('gioco') || "1";
+    const config = giochiData[giocoId];
+
+    if (config) {
+        document.getElementById("titolo-gioco").innerText = config.titolo;
+        document.getElementById("descrizione-gioco").innerText = config.desc;
+        document.body.style.backgroundImage = `url('${config.bg}')`;
+        document.body.style.setProperty('--primary-color', config.color);
+        document.body.style.setProperty('--accent-color', config.accent);
+    }
+
+    let nomi = ["KNIGHT", "KING", "MAGE", "COCO-FAN"];
+    let idx = 0;
+
+    function nextName(dir) {
+        idx = (idx + dir + nomi.length) % nomi.length;
+        document.getElementById("current-name").innerText = nomi[idx];
+    }
+
+    function startGame() {
+        const input = document.getElementById("new-name").value;
+        const finalName = input.trim() !== "" ? input : nomi[idx];
+        localStorage.setItem("playerName", finalName);
+        if (config) window.location.href = config.link;
+    }
+</script>
+</body>
+</html>

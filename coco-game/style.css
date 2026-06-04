@@ -1,0 +1,124 @@
+/* ==========================================
+ * 1. STILI GLOBALI, RESET E CURSORE
+ * ========================================== */
+@font-face {
+  font-family: 'KarmaticArcade';
+  src: url('font/ka1.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'KarmaticArcade', monospace;
+  /* CURSORE PERSONALIZZATO: applicato ovunque di base */
+  cursor: url('img/cursor.png'), auto;
+}
+
+/* Forza il cursore personalizzato anche su tutti gli elementi cliccabili del sito */
+a, button, select, input,
+.btn, .back-arrow, .back-btn, .play-arrow,
+.card-link, .game-btn, .nav-btn, .hen, #start-btn, .arrow-nav {
+  cursor: url('img/cursor.png'), pointer !important;
+}
+
+img {
+  image-rendering: pixelated;
+  display: block;
+}
+
+canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Frecce di ritorno uguali e identiche per TUTTE le pagine */
+.back-arrow, .back-btn {
+  position: fixed;
+  bottom: 25px;
+  left: 25px;
+
+  /* Rimpicciolito molto: la freccia ora oscillerà tra i 30px e i 50px */
+  width: clamp(30px, 4vw, 50px);
+
+  aspect-ratio: 1 / 1;
+  z-index: 999;
+  image-rendering: pixelated;
+
+  /* Sfondo */
+  background-image: url('img/freccia.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  /* Rotazione fissa e blindata */
+  rotate: 270deg;
+
+  transition: transform 0.1s;
+}
+
+
+
+.back-arrow:hover, .back-btn:hover {
+  transform: scale(1.1);
+}
+
+
+/* Stile unico e uniforme per i titoli principali di tutte le pagine */
+/* Stile unico, uniforme e bloccato alla stessa altezza per tutte le pagine */
+.main-game-title {
+  font-family: 'KarmaticArcade', monospace; /* Font arcade */
+  font-size: clamp(24px, 4vw, 48px);        /* Stessa grandezza responsive */
+  color: #ffffff;                           /* Stesso colore (Bianco) */
+  text-transform: uppercase;
+  text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  letter-spacing: 2px;
+
+  /* FORZA LA STESSA ALTEZZA SU TUTTE LE PAGINE */
+  position: absolute;
+  top: clamp(20px, 5vh, 50px); /* Distanza fissa e identica dall'alto dello schermo */
+  left: 50%;
+  transform: translateX(-50%); /* Centra perfettamente il titolo in orizzontale */
+  width: 100%;
+  margin: 0;
+  z-index: 10; /* Fa sì che il titolo rimanga sopra agli altri elementi grafici */
+}
+
+/* ==========================================================================
+ *  STILE UNIFICATO PER IL PUNTEGGIO IN ALTO A SINISTRA
+ *  ========================================================================== */
+
+/* Per i giochi con testo HTML (Memory e Snake) */
+#score-display, .score-box {
+position: absolute !important;
+top: 20px !important;
+left: 20px !important;
+font-family: 'KarmaticArcade', sans-serif !important; /* Fallback se il font non c'è */
+font-size: clamp(24px, 4vw, 40px) !important;
+font-weight: 900 !important;
+color: #ffffff !important;
+text-shadow: 3px 3px 0px #000000 !important;
+z-index: 9999 !important;
+letter-spacing: 2px !important;
+pointer-events: none;
+margin: 0 !important;
+padding: 0 !important;
+}
+
+/* Variabili di configurazione lette dagli script Canvas (Nyan e Flappy) */
+:root {
+  --score-font: 'KarmaticArcade';
+  --score-color: #ffffff;
+  --score-shadow: #000000;
+}
