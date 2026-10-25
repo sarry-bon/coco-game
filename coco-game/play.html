@@ -7,18 +7,15 @@
     <link rel="stylesheet" href="style.css">
     <style>
         body.page-play {
-            /* Colore base: Viola Lavanda Opaco */
             background-color: #84659b; 
             
-            /* Sfondo a colonne con la sfumatura orizzontale (chiaro al centro dello schermo, scuro sopra e sotto) */
             background-image: 
                 linear-gradient(to bottom, rgba(0, 0, 0, 0.22) 0%, rgba(255, 255, 255, 0.25) 50%, rgba(0, 0, 0, 0.25) 100%),
                 linear-gradient(90deg, 
-                    #9678af 0%, #9678af 50%,  /* Prima colonna (Viola pastello più chiaro) */
-                    #84659b 50%, #84659b 100% /* Seconda colonna (Variante coordinata opaca) */
+                    #9678af 0%, #9678af 50%,  
+                    #84659b 50%, #84659b 100% 
                 );
             
-            /* Spessore delle colonne coordinato con le altre pagine (90px a colonna) */
             background-size: 100% 100%, 180px 100%;
 
             color: #000; 
@@ -30,7 +27,7 @@
             overflow: hidden;
             margin: 0; 
             padding: 0; 
-            font-family: sans-serif; /* Reset base per consistenza */
+            font-family: sans-serif;
             box-sizing: border-box;
         }
 
@@ -61,30 +58,24 @@
         }
 
         .card-link { transition: transform 0.2s; text-decoration: none; display: inline-block; }
-        /* Modificato il max del clamp da 300px a 240px per evitare che le immagini esplodano in altezza su F11 */
         .card-img { width: clamp(80px, 15vw, 240px); image-rendering: pixelated; display: block; height: auto; }
         .card-link:hover { transform: scale(1.05); }
 
-        /* Ridotto leggermente il max del bottone centrale per proporzione */
         .play-main-btn { width: clamp(70px, 11vw, 200px); image-rendering: pixelated; transition: transform 0.1s; cursor: pointer; height: auto; }
         .play-main-btn:hover { transform: scale(1.1) rotate(-2deg); }
 
-        /* --- MEDIA QUERIES PER SCHERMI BASSI / F11 MODALITÀ LANDSCAPE --- */
-
-        /* Se l'altezza dello schermo scende sotto i 650px (classico scenario F11 su laptop o schermi compatti) */
         @media (max-height: 650px) {
             .game-selection {
-                gap: 8px; /* Rimpicciolisce lo spazio verticale tra le righe */
+                gap: 8px;
             }
             .card-img {
-                width: clamp(60px, 12vw, 160px); /* Riduce le card per non farle uscire dallo schermo */
+                width: clamp(60px, 12vw, 160px);
             }
             .play-main-btn {
-                width: clamp(55px, 9vw, 130px); /* Riduce il bottone centrale di conseguenza */
+                width: clamp(55px, 9vw, 130px);
             }
         }
 
-        /* Controllo ultra-stretto in altezza per i casi estremi (es. monitor molto larghi ma bassi in F11) */
         @media (max-height: 480px) {
             .game-selection {
                 gap: 5px;
