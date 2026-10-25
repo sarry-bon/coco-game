@@ -184,7 +184,6 @@
         z-index:1;
     }
 
-    /* CONTENITORE PRINCIPALE DEI BOTTONI */
     .menu-container{
         position:fixed;
 
@@ -197,7 +196,6 @@
         align-items:flex-end; 
         justify-content:center;
 
-        /* Gap azzerato: la vicinanza è gestita dai margini negativi del Play */
         gap: 0; 
 
         width: max-content;
@@ -205,7 +203,6 @@
         z-index:10;
     }
 
-    /* STRUTTURA BASE DEI BOTTONI */
     .btn{
         position: relative;
         display: inline-flex;
@@ -215,7 +212,6 @@
         transition:transform 0.2s;
     }
 
-    /* STRUTTURA DEL TESTO SOPRA I BOTTONI */
     .btn-text {
         position: absolute;
         top: 0%;
@@ -239,21 +235,17 @@
             0 0 25px rgba(0,0,0,0.5);
     }
 
-    /* GESTIONE LIVELLI (Z-INDEX) E MARGINI DI INCASTRO */
     .btn-side {
-        z-index: 1; /* Sotto al bottone centrale di base */
+        z-index: 1;
     }
 
     .btn-main {
-        z-index: 5; /* Sempre sopra a INFO e RANK di base */
+        z-index: 5;
         
-        /* Forza l'avvicinamento dei bottoni laterali. 
-           Rendi il numero ancora più negativo (es: -60px) se li vuoi ancora più vicini */
         margin-left: -40px;
         margin-right: -40px;
     }
 
-    /* GRANDEZZA TESTI */
     .btn-main .btn-text {
         top: 35%;
         font-size: clamp(30px, 3.5vw, 54px); 
@@ -273,7 +265,6 @@
         left: 50%;
     }
 
-    /* GRANDEZZA DELLE IMMAGINI */
     .btn img{
         width: clamp(250px, 25vw, 550px);
         display: block;
@@ -286,17 +277,14 @@
         width: clamp(280px, 28vw, 600px);
     }
 
-    /* GESTIONE HOVER: EFFETTI ALLARGAMENTO SENZA COPRIRE IL PLAY */
     .btn:hover {
         transform: scale(1.1);
     }
 
-    /* Quando passi sopra a un bottone laterale, rimane COMUNQUE sotto al Play (z-index inferiore a 5) */
     .btn-side:hover {
         z-index: 2; 
     }
 
-    /* Quando passi sopra al Play, va in primissimo piano assoluto */
     .btn-main:hover {
         z-index: 10; 
     }
