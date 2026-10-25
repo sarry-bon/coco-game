@@ -55,7 +55,6 @@
             box-sizing: border-box;
         }
 
-        /* Struttura della gallina con l'indicatore del tasto */
         .hen-container {
             display: flex;
             flex-direction: column;
@@ -77,7 +76,6 @@
         .hen.active .open-frame { display: block; }
         .hen:active, .hen.keyboard-active { transform: scale(0.95); }
 
-        /* Etichetta visiva del tasto da premere */
         .key-hint {
             background-color: #000;
             color: #fff;
@@ -224,7 +222,6 @@
         const bodyElement = document.body;
         const gameOverScreen = document.getElementById('game-over-screen');
 
-        // Mappatura dei tasti fisici agli ID delle galline
         const keyMap = {
             'a': 1, 'A': 1,
             'd': 2, 'D': 2,
@@ -234,9 +231,7 @@
 
         startBtn.addEventListener('click', startGame);
 
-        // Ascolto degli input della tastiera
         window.addEventListener('keydown', function(e) {
-            // Se la schermata di game over è attiva, premi Invio o Spazio per fare il Replay
             if (isGameOver) {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -245,7 +240,6 @@
                 return;
             }
 
-            // Se il gioco non è ancora iniziato, premi Invio o Spazio per iniziare
             if (gameSequence.length === 0 && !isPlayingSequence) {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -254,12 +248,10 @@
                 return;
             }
 
-            // Controlla se il tasto premuto corrisponde a una gallina
             if (keyMap[e.key] !== undefined) {
                 e.preventDefault();
                 const id = keyMap[e.key];
                 
-                // Effettua il click simulato solo se la sequenza non è in riproduzione
                 if (!isPlayingSequence && gameSequence.length > 0) {
                     const hen = document.querySelector(`.hen[data-id="${id}"]`);
                     hen.classList.add('keyboard-active');
