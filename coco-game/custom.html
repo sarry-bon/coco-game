@@ -27,15 +27,12 @@
             transition: background 0.5s;
             background-color: #000;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            
-            /* CORREZIONE SFOCATURA SFONDO: Mantiene i pixel nitidi per i giochi della lista (flappy, memory, ecc.) */
             image-rendering: -moz-crisp-edges;
             image-rendering: -webkit-crisp-edges;
             image-rendering: pixelated;
             image-rendering: crisp-edges;
         }
 
-        /* Sfondo oscurato per far risaltare l'interfaccia */
         body.page-custom::before {
             content: ""; 
             position: absolute; 
@@ -56,7 +53,6 @@
             height: 100%; 
         }
 
-        /* Pannello Sinistro: Contenuti principali */
         .left-panel {
             width: 55%; 
             display: flex; 
@@ -67,7 +63,6 @@
             box-sizing: border-box;
         }
 
-        /* INFO DEL GIOCO (BLOCCO ALTO) */
         .header-section {
             display: flex;
             flex-direction: column;
@@ -85,7 +80,6 @@
             text-shadow: 2px 4px 10px rgba(0,0,0,0.7);
         }
 
-        /* Modificato bordo in rettangolare netto per stile arcade */
         #descrizione-gioco {
             font-size: clamp(14px, 1.3vw, 19px); 
             margin: 0;
@@ -99,7 +93,6 @@
             backdrop-filter: blur(5px);
         }
 
-        /* SEZIONE PROFILO: TRASFORMATA IN STILE ARCADE RETTANGOLARE */
         .login-box {
             display: flex; 
             flex-direction: column; 
@@ -129,7 +122,6 @@
             gap: 20px;
         }
 
-        /* Box nome squadrato */
         .name-tag {
             font-size: 26px; 
             font-weight: 900;
@@ -145,7 +137,6 @@
             text-transform: uppercase;
         }
 
-        /* Input di testo squadrato */
         .input-field {
             background: rgba(0,0,0,0.8); 
             border: 2px solid rgba(255,255,255,0.4); 
@@ -165,7 +156,6 @@
             box-shadow: 0 0 10px rgba(var(--accent-color), 0.5);
         }
 
-        /* Pulsanti freccia squadrati */
         button.arrow-nav {
             background: rgba(255,255,255,0.1); 
             border: 2px solid rgba(255,255,255,0.3); 
@@ -183,7 +173,6 @@
             border-color: var(--accent-color);
         }
 
-        /* Pannello Destro */
         .right-panel { 
             width: 45%; 
             display: flex; 
@@ -191,7 +180,6 @@
             justify-content: center; 
         }
 
-        /* CORREZIONE IMMAGINI: Mantenuto il pixelated e aggiunti i prefissi di compatibilità browser */
         .play-arrow, .back-btn {
             cursor: pointer;
             image-rendering: -moz-crisp-edges;
@@ -211,7 +199,6 @@
             filter: drop-shadow(0 12px 20px rgba(0,0,0,0.7)) brightness(1.1);
         }
 
-        /* Pulsante indietro fluttuante */
         .back-btn {
             position: absolute;
             bottom: 30px;
@@ -279,7 +266,7 @@
 "3": { 
             titolo: "Doom Coco", 
             desc: "Sopravvivi nei meandri delle Backrooms respingendo l'entità KFC in un frenetico sparatutto 3D in prima persona in stile retrò.", 
-            color: "#D4A313",  // Giallo ocra scuro / senape retrò
+            color: "#D4A313",
             accent: "#D4A313",
             link: "doom.html", 
             bg: "img/sfondo3.png"
