@@ -7,27 +7,22 @@
     <link rel="stylesheet" href="style.css">
     <style>
         body.page-rank {
-            /* Colore base giallo arancio antico */
             background-color: #e4ad71; 
             
-            /* Sfondo a colonne con la sfumatura orizzontale arcade (chiaro al centro dello schermo, scuro sopra/sotto) */
             background-image: 
                 linear-gradient(to bottom, rgba(0, 0, 0, 0.22) 0%, rgba(255, 255, 255, 0.25) 50%, rgba(0, 0, 0, 0.25) 100%),
                 linear-gradient(90deg, 
-                    #e4ad71 0%, #e4ad71 50%,  /* Prima colonna (Il tuo arancio antico base) */
-                    #d69e62 50%, #d69e62 100% /* Seconda colonna (Variante coordinata leggermente più intensa) */
+                    #e4ad71 0%, #e4ad71 50%,  
+                    #d69e62 50%, #d69e62 100% 
                 );
             
-            /* Spessore delle colonne coordinato (90px a colonna) */
             background-size: 100% 100%, 180px 100%;
 
             color: #000;
             display: flex; flex-direction: column; align-items: center;
             justify-content: center; height: 100vh; overflow: hidden;
-            margin: 0; padding: 0; font-family: sans-serif; /* Reset base per consistenza */
+            margin: 0; padding: 0; font-family: sans-serif;
         }
-
-        /* NOTA: Il vecchio stile #classifica-titolo è stato rimosso da qui perché ora gestito da .main-game-title in style.css */
 
         .rank-layout {
             display: flex; align-items: center; justify-content: space-between;
