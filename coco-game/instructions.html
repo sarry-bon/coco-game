@@ -7,21 +7,17 @@
     <link rel="stylesheet" href="style.css">
     <style>
         body.page-instruction { 
-            /* Il tuo colore principale */
             background-color: #2c3e50; 
             
-            /* Sfondo a colonne con sfumatura orizzontale (chiaro al centro dello schermo, scuro sopra e sotto) */
             background-image: 
                 linear-gradient(to bottom, rgba(0, 0, 0, 0.35) 0%, rgba(255, 255, 255, 0.22) 50%, rgba(0, 0, 0, 0.4) 100%),
                 linear-gradient(90deg, 
                     #638fa3 0%, #638fa3 50%,  
-                    #557e91 50%, #557e91 100%/* Seconda colonna (Tonalità coordinata) */
+                    #557e91 50%, #557e91 100%
                 );
             
-            /* Spessore delle colonne (90px a colonna) */
             background-size: 100% 100%, 180px 100%;
 
-            /* Impostato in verticale per posizionare il nuovo titolo sopra al libro */
             display: flex; 
             flex-direction: column;
             justify-content: center; 
@@ -41,16 +37,14 @@
             display: flex; justify-content: space-around; align-items: center; pointer-events: none;
         }
 
-        /* MODIFICATO: Più largo, font più grande e interlinea molto più spaziosa */
         .page-content { 
             width: 42%; 
             text-align: center; 
             color: #4a3321; 
-            font-size: clamp(11px, 1.5vw, 20px); /* Carattere più grande */
-            line-height: 1.8;                    /* Maggiore spazio tra le righe */
+            font-size: clamp(11px, 1.5vw, 20px);
+            line-height: 1.8;
         }
 
-        /* MODIFICATO: Più spazio verticale tra i singoli comandi/obiettivi */
         .page-content p {
             margin: 18px 0; 
         }
@@ -64,7 +58,6 @@
         <img src="img/libro.png" alt="Libro Istruzioni">
         <div class="text-overlay">
             
-            <!-- PAGINA SINISTRA: CONTROLLI (PIÙ GRANDI E SPAZIOSI) -->
             <div class="page-content">
                 <h3 style="font-size: clamp(14px, 2.2vw, 28px); margin-bottom: 20px; text-transform: uppercase; font-weight: bold;">Controlli</h3>
                 <div style="text-align: left; margin: 0 auto; max-width: 85%;">
@@ -77,7 +70,6 @@
                 </div>
             </div>
 
-            <!-- PAGINA DESTRA: OBIETTIVI (PIÙ GRANDI E SPAZIOSI) -->
             <div class="page-content">
                 <h3 style="font-size: clamp(14px, 2.2vw, 28px); margin-bottom: 20px; text-transform: uppercase; font-weight: bold;">Obiettivi</h3>
                 <div style="text-align: left; margin: 0 auto; max-width: 85%;">
